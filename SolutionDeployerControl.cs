@@ -2,6 +2,7 @@
 using McTools.Xrm.Connection.WinForms;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using Microsoft.Xrm.Tooling.Connector;
 using Sujan_Solution_Deployer.Models;
 using Sujan_Solution_Deployer.Services;
 using System;
@@ -148,20 +149,43 @@ namespace Sujan_Solution_Deployer
                         continue;
                     }
 
-                    var target = new DeploymentTarget
+                    try
                     {
-                        Name = connection.ConnectionName,
-                        ConnectionDetail = connection
-                    };
+                        // Test connection before adding
+                        LogInfo($"🔌 Testing connection to '{connection.ConnectionName}'...");
 
-                    targetEnvironments.Add(target);
-                    chkTargetEnvironments.Items.Add(target.Name, false);
-                    LogInfo($"➕ Added target environment: {target.Name}");
+                        var serviceClient = ConnectionManager.CreateServiceClient(connection);
+
+                        if (!serviceClient.IsReady)
+                        {
+                            LogError($"Failed to connect to '{connection.ConnectionName}': {serviceClient.LastCrmError}");
+                            MessageBox.Show($"Failed to connect to '{connection.ConnectionName}'.\n\nError: {serviceClient.LastCrmError}",
+                                "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            continue;
+                        }
+
+                        var target = new DeploymentTarget
+                        {
+                            Name = connection.ConnectionName,
+                            ConnectionDetail = connection,
+                            ServiceClient = serviceClient
+                        };
+
+                        targetEnvironments.Add(target);
+                        chkTargetEnvironments.Items.Add(target.Name, false);
+                        LogInfo($"➕ Added target environment: {target.Name}");
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError($"Error adding target '{connection.ConnectionName}': {ex.Message}");
+                        MessageBox.Show($"Error adding target '{connection.ConnectionName}':\n\n{ex.Message}",
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
 
                 if (selector.SelectedConnections.Count > 0)
                 {
-                    ShowInfoNotification($"Added {selector.SelectedConnections.Count} target environment(s)", null);
+                    ShowInfoNotification($"Added target environment(s)", null);
                 }
             }
         }
@@ -182,6 +206,16 @@ namespace Sujan_Solution_Deployer
                 var target = targetEnvironments.FirstOrDefault(t => t.Name == item);
                 if (target != null)
                 {
+                    // Dispose service client
+                    if (target.ServiceClient != null)
+                    {
+                        try
+                        {
+                            target.ServiceClient.Dispose();
+                        }
+                        catch { }
+                    }
+
                     targetEnvironments.Remove(target);
                     chkTargetEnvironments.Items.Remove(item);
                     LogInfo($"➖ Removed target environment: {item}");
@@ -382,9 +416,36 @@ namespace Sujan_Solution_Deployer
                                         (int)((double)completedOperations / totalOperations * 100),
                                         $"\n🎯 Deploying to: {target.Name}");
 
-                                    // Connect to target
-                                    worker.ReportProgress(0, $"   🔌 Connecting to {target.Name}...");
-                                    var targetService = ConnectionManager.GetOrganizationService(target.ConnectionDetail);
+                                    // Ensure we have a valid connection
+                                    worker.ReportProgress(0, $"   🔌 Verifying connection to {target.Name}...");
+
+                                    IOrganizationService targetService = null;
+
+                                    // Check if ServiceClient is valid
+                                    if (target.ServiceClient == null || !target.ServiceClient.IsReady)
+                                    {
+                                        worker.ReportProgress(0, $"   🔄 Reconnecting to {target.Name}...");
+                                        target.ServiceClient = ConnectionManager.CreateServiceClient(target.ConnectionDetail);
+                                    }
+
+                                    // ✅ Extend timeout to 20 minutes
+                                    if (target.ServiceClient.OrganizationWebProxyClient != null)
+                                    {
+                                        targetService = target.ServiceClient.OrganizationWebProxyClient;
+                                        target.ServiceClient.OrganizationWebProxyClient.InnerChannel.OperationTimeout = new TimeSpan(0, 20, 0);
+                                    }
+                                    else if (target.ServiceClient.OrganizationServiceProxy != null)
+                                    {
+                                        targetService = target.ServiceClient.OrganizationServiceProxy;
+                                        target.ServiceClient.OrganizationServiceProxy.Timeout = new TimeSpan(0, 20, 0);
+                                    }
+                                    else
+                                    {
+                                        throw new Exception("Unable to get organization service from connection");
+                                    }
+
+                                    worker.ReportProgress(0, $"   ✅ Connection verified to {target.Name}");
+
                                     var targetSolutionService = new SolutionService(targetService);
 
                                     // Import solution
@@ -393,13 +454,14 @@ namespace Sujan_Solution_Deployer
                                         solutionFile,
                                         chkPublishWorkflows.Checked,
                                         chkOverwriteCustomizations.Checked,
-                                        (msg) => worker.ReportProgress(0, $"   {msg}"));
+                                        (msg) => worker.ReportProgress(0, $"      {msg}"));
 
                                     // Monitor import progress
                                     worker.ReportProgress(0, $"   ⏳ Monitoring import progress...");
                                     bool importCompleted = false;
                                     int maxRetries = 120; // 10 minutes (5 seconds * 120)
                                     int retryCount = 0;
+                                    double lastProgress = 0;
 
                                     while (!importCompleted && retryCount < maxRetries)
                                     {
@@ -407,7 +469,12 @@ namespace Sujan_Solution_Deployer
 
                                         var (status, progress, isCompleted) = targetSolutionService.GetImportJobStatus(importJobId);
 
-                                        worker.ReportProgress(0, $"   📊 {solution.FriendlyName} → {target.Name}: {status}");
+                                        // Only log if progress changed
+                                        if (progress != lastProgress || isCompleted)
+                                        {
+                                            worker.ReportProgress(0, $"   📊 Import Progress: {progress:F0}% - {status}");
+                                            lastProgress = progress;
+                                        }
 
                                         importCompleted = isCompleted;
                                         retryCount++;
@@ -415,16 +482,22 @@ namespace Sujan_Solution_Deployer
 
                                     if (importCompleted)
                                     {
-                                        worker.ReportProgress(0, $"   ✅ Successfully deployed to {target.Name}");
+                                        worker.ReportProgress(0, $"   ✅ Successfully deployed {solution.FriendlyName} to {target.Name}");
                                     }
                                     else
                                     {
-                                        worker.ReportProgress(0, $"   ⚠️ Import timeout for {target.Name}. Please check the target environment.");
+                                        worker.ReportProgress(0, $"   ⚠️ Import timeout for {target.Name}. The import may still be processing. Please check the target environment.");
                                     }
                                 }
                                 catch (Exception ex)
                                 {
                                     worker.ReportProgress(0, $"   ❌ Error deploying to {target.Name}: {ex.Message}");
+
+                                    // Log full exception for debugging
+                                    if (ex.InnerException != null)
+                                    {
+                                        worker.ReportProgress(0, $"      Inner Exception: {ex.InnerException.Message}");
+                                    }
                                 }
 
                                 completedOperations++;
@@ -545,6 +618,15 @@ namespace Sujan_Solution_Deployer
                 info.ToolBoxReason == ToolBoxCloseReason.CloseAll ||
                 info.ToolBoxReason == ToolBoxCloseReason.CloseAllExceptActive)
             {
+                // Clean up service clients
+                foreach (var target in targetEnvironments)
+                {
+                    try
+                    {
+                        target.ServiceClient?.Dispose();
+                    }
+                    catch { }
+                }
                 return;
             }
 
@@ -556,6 +638,18 @@ namespace Sujan_Solution_Deployer
                     "Deployment In Progress",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning) != DialogResult.Yes;
+            }
+            else
+            {
+                // Clean up service clients
+                foreach (var target in targetEnvironments)
+                {
+                    try
+                    {
+                        target.ServiceClient?.Dispose();
+                    }
+                    catch { }
+                }
             }
         }
         #endregion
