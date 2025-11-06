@@ -40,12 +40,11 @@ namespace Sujan_Solution_Deployer
             this.rbUpdate = new System.Windows.Forms.RadioButton();
             this.btnDeploy = new System.Windows.Forms.Button();
             this.progressBar = new System.Windows.Forms.ProgressBar();
-            this.txtLog = new System.Windows.Forms.RichTextBox();
             this.lblProgress = new System.Windows.Forms.Label();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.tsbClearLog = new System.Windows.Forms.ToolStripButton();
+            this.tsbDeploymentLogs = new System.Windows.Forms.ToolStripButton();
             this.grpSourceEnvironment.SuspendLayout();
             this.grpTargetEnvironment.SuspendLayout();
             this.grpBackup.SuspendLayout();
@@ -297,7 +296,7 @@ namespace Sujan_Solution_Deployer
             this.btnDeploy.ForeColor = System.Drawing.Color.White;
             this.btnDeploy.Location = new System.Drawing.Point(15, 450);
             this.btnDeploy.Name = "btnDeploy";
-            this.btnDeploy.Size = new System.Drawing.Size(985, 39);
+            this.btnDeploy.Size = new System.Drawing.Size(985, 61);
             this.btnDeploy.TabIndex = 4;
             this.btnDeploy.Text = "🚀 START DEPLOYMENT";
             this.btnDeploy.UseVisualStyleBackColor = false;
@@ -307,31 +306,16 @@ namespace Sujan_Solution_Deployer
             // 
             this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(15, 519);
+            this.progressBar.Location = new System.Drawing.Point(15, 551);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(985, 30);
             this.progressBar.TabIndex = 6;
-            // 
-            // txtLog
-            // 
-            this.txtLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtLog.BackColor = System.Drawing.Color.Black;
-            this.txtLog.Font = new System.Drawing.Font("Consolas", 9F);
-            this.txtLog.ForeColor = System.Drawing.Color.Lime;
-            this.txtLog.Location = new System.Drawing.Point(15, 570);
-            this.txtLog.Name = "txtLog";
-            this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(985, 180);
-            this.txtLog.TabIndex = 7;
-            this.txtLog.Text = "📝 Deployment Log:\n==================\nReady to deploy solutions...\n";
             // 
             // lblProgress
             // 
             this.lblProgress.AutoSize = true;
             this.lblProgress.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.lblProgress.Location = new System.Drawing.Point(15, 493);
+            this.lblProgress.Location = new System.Drawing.Point(15, 529);
             this.lblProgress.Name = "lblProgress";
             this.lblProgress.Size = new System.Drawing.Size(166, 15);
             this.lblProgress.TabIndex = 5;
@@ -342,7 +326,7 @@ namespace Sujan_Solution_Deployer
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsbClose,
             this.toolStripSeparator1,
-            this.tsbClearLog});
+            this.tsbDeploymentLogs});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.Size = new System.Drawing.Size(1020, 25);
@@ -362,13 +346,13 @@ namespace Sujan_Solution_Deployer
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
-            // tsbClearLog
+            // tsbDeploymentLogs
             // 
-            this.tsbClearLog.Image = global::Sujan_Solution_Deployer.Properties.Resources.clear_log_16px;
-            this.tsbClearLog.Name = "tsbClearLog";
-            this.tsbClearLog.Size = new System.Drawing.Size(77, 22);
-            this.tsbClearLog.Text = "Clear Log";
-            this.tsbClearLog.Click += new System.EventHandler(this.tsbClearLog_Click);
+            this.tsbDeploymentLogs.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbDeploymentLogs.Name = "tsbDeploymentLogs";
+            this.tsbDeploymentLogs.Size = new System.Drawing.Size(119, 22);
+            this.tsbDeploymentLogs.Text = "📋 Deployment Logs";
+            this.tsbDeploymentLogs.Click += new System.EventHandler(this.tsbDeploymentLogs_Click);
             // 
             // SolutionDeployerControl
             // 
@@ -376,7 +360,6 @@ namespace Sujan_Solution_Deployer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.toolStrip);
-            this.Controls.Add(this.txtLog);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.lblProgress);
             this.Controls.Add(this.btnDeploy);
@@ -386,7 +369,7 @@ namespace Sujan_Solution_Deployer
             this.Controls.Add(this.grpSourceEnvironment);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.Name = "SolutionDeployerControl";
-            this.Size = new System.Drawing.Size(1020, 760);
+            this.Size = new System.Drawing.Size(1020, 605);
             this.Load += new System.EventHandler(this.SolutionDeployerControl_Load);
             this.grpSourceEnvironment.ResumeLayout(false);
             this.grpSourceEnvironment.PerformLayout();
@@ -399,6 +382,7 @@ namespace Sujan_Solution_Deployer
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
+
 
         }
 
@@ -425,11 +409,10 @@ namespace Sujan_Solution_Deployer
         private System.Windows.Forms.CheckBox chkOverwriteCustomizations;
         private System.Windows.Forms.Button btnDeploy;
         private System.Windows.Forms.ProgressBar progressBar;
-        private System.Windows.Forms.RichTextBox txtLog;
         private System.Windows.Forms.Label lblProgress;
         private System.Windows.Forms.ToolStrip toolStrip;
         private System.Windows.Forms.ToolStripButton tsbClose;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripButton tsbClearLog;
+        private System.Windows.Forms.ToolStripButton tsbDeploymentLogs;
     }
 }

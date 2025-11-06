@@ -2,19 +2,15 @@
 using McTools.Xrm.Connection.WinForms;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Tooling.Connector;
 using Sujan_Solution_Deployer.Models;
 using Sujan_Solution_Deployer.Services;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
 using ConnectionManager = Sujan_Solution_Deployer.Services.ConnectionManager;
@@ -29,10 +25,12 @@ namespace Sujan_Solution_Deployer
         private List<DeploymentTarget> targetEnvironments = new List<DeploymentTarget>();
         private List<SolutionInfo> unmanagedSolutions = new List<SolutionInfo>();
         private List<SolutionInfo> managedSolutions = new List<SolutionInfo>();
-
+        private DeploymentLogForm logForm = null;
+        private DeploymentHistoryService deploymentHistoryService;
         public SolutionDeployerControl()
         {
             InitializeComponent();
+            deploymentHistoryService = new DeploymentHistoryService();
         }
 
         #region ==>Methods
@@ -40,6 +38,16 @@ namespace Sujan_Solution_Deployer
         {
             ShowInfoNotification("Welcome to Sujan Solution Deployer! Connect to your DEV environment to begin.", null);
             InitializeDefaultSettings();
+            InitializeLogForm();
+        }
+
+        private void InitializeLogForm()
+        {
+            if (logForm == null || logForm.IsDisposed)
+            {
+                logForm = new DeploymentLogForm();
+                // Don't set FormClosed event - we want to keep the form alive
+            }
         }
 
         private void InitializeDefaultSettings()
@@ -83,14 +91,14 @@ namespace Sujan_Solution_Deployer
                 Message = "Loading solutions from connected environment...",
                 Work = (worker, args) =>
                 {
-                solutionService = new SolutionService(Service);
-                // Load unmanaged solutions
-                var unmanaged = solutionService.GetAllSolutions(false);
+                    solutionService = new SolutionService(Service);
+                    // Load unmanaged solutions
+                    var unmanaged = solutionService.GetAllSolutions(false);
 
-                // Load managed solutions
-                var managed = solutionService.GetAllSolutions(true);
-                args.Result = new { Unmanaged = unmanaged, Managed = managed };
-                
+                    // Load managed solutions
+                    var managed = solutionService.GetAllSolutions(true);
+                    args.Result = new { Unmanaged = unmanaged, Managed = managed };
+
                 },
                 PostWorkCallBack = (args) =>
                 {
@@ -299,6 +307,32 @@ namespace Sujan_Solution_Deployer
             {
                 StartDeployment(selectedSolutions, selectedTargets);
             }
+
+            // ✅ Open log window automatically
+            if (logForm == null || logForm.IsDisposed)
+            {
+                InitializeLogForm();
+            }
+
+            // Show the window (will preserve existing logs if reopened)
+            if (!logForm.Visible)
+            {
+                logForm.Show(this);
+                tsbDeploymentLogs.Text = "❌ Close Logs";
+            }
+            //if (logForm == null || logForm.IsDisposed)
+            //{
+            //    logForm = new DeploymentLogForm();
+            //    logForm.FormClosed += (s, args) =>
+            //    {
+            //        logForm = null;
+            //        tsbDeploymentLogs.Text = "📋 Deployment Logs";
+            //    };
+            //}
+
+            //logForm.Show(this);
+            //logForm.ClearLog();
+            //tsbDeploymentLogs.Text = "❌ Close Logs";
         }
 
         private List<SolutionInfo> GetSelectedSolutions()
@@ -345,7 +379,12 @@ namespace Sujan_Solution_Deployer
         }
 
         private void StartDeployment(List<SolutionInfo> solutions, List<DeploymentTarget> targets)
-        {
+        {   // ✅ Mark deployment as in progress
+            if (logForm != null && !logForm.IsDisposed)
+            {
+                logForm.SetDeploymentInProgress(true);
+            }
+
             // Disable UI during deployment
             btnDeploy.Enabled = false;
             btnLoadSolutions.Enabled = false;
@@ -354,6 +393,9 @@ namespace Sujan_Solution_Deployer
             progressBar.Value = 0;
             progressBar.Maximum = 100;
 
+            LogInfo("\n\n" + new string('=', 60));
+            LogInfo($"🆕 NEW DEPLOYMENT SESSION - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            LogInfo(new string('=', 60));
             LogInfo("==========================================");
             LogInfo("🚀 DEPLOYMENT STARTED");
             LogInfo("==========================================");
@@ -537,6 +579,14 @@ namespace Sujan_Solution_Deployer
                     btnRemoveTarget.Enabled = true;
                     progressBar.Value = 100;
 
+                    // ✅ Mark deployment as completed
+                    if (logForm != null && !logForm.IsDisposed)
+                    {
+                        logForm.SetDeploymentInProgress(false);
+                    }
+
+                    tsbDeploymentLogs.Text = "📋 Deployment Logs";
+
                     if (args.Error != null)
                     {
                         LogError($"\n❌ Deployment error: {args.Error.Message}");
@@ -558,58 +608,66 @@ namespace Sujan_Solution_Deployer
         }
 
         private void LogInfo(string message)
-        {
+        {   // Log to log form if it exists
+            if (logForm != null && !logForm.IsDisposed)
+            {
+                logForm.AppendLog(message, Color.Lime);
+            }
+
+            // Also keep minimal info in main window
             if (InvokeRequired)
             {
                 Invoke(new Action(() => LogInfo(message)));
                 return;
             }
 
-            txtLog.SelectionColor = Color.Lime;
-            txtLog.AppendText($"{message}\n");
-            txtLog.ScrollToCaret();
+            //txtLog.SelectionColor = Color.Lime;
+            //txtLog.AppendText($"{message}\n");
+            //txtLog.ScrollToCaret();
         }
 
         private void LogWarning(string message)
         {
+            if (logForm != null && !logForm.IsDisposed)
+            {
+                logForm.AppendLog($"⚠️ {message}", Color.Yellow);
+            }
+
             if (InvokeRequired)
             {
                 Invoke(new Action(() => LogWarning(message)));
                 return;
             }
 
-            txtLog.SelectionColor = Color.Yellow;
-            txtLog.AppendText($"⚠️ {message}\n");
-            txtLog.SelectionColor = Color.Lime;
-            txtLog.ScrollToCaret();
+            //txtLog.SelectionColor = Color.Yellow;
+            //txtLog.AppendText($"⚠️ {message}\n");
+            //txtLog.SelectionColor = Color.Lime;
+            //txtLog.ScrollToCaret();
         }
 
         private void LogError(string message)
         {
+            if (logForm != null && !logForm.IsDisposed)
+            {
+                logForm.AppendLog($"❌ {message}", Color.Red);
+            }
+
             if (InvokeRequired)
             {
                 Invoke(new Action(() => LogError(message)));
                 return;
             }
 
-            txtLog.SelectionColor = Color.Red;
-            txtLog.AppendText($"❌ {message}\n");
-            txtLog.SelectionColor = Color.Lime;
-            txtLog.ScrollToCaret();
+            //txtLog.SelectionColor = Color.Red;
+            //txtLog.AppendText($"❌ {message}\n");
+            //txtLog.SelectionColor = Color.Lime;
+            //txtLog.ScrollToCaret();
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
         {
             CloseTool();
         }
-        private void tsbClearLog_Click(object sender, EventArgs e)
-        {
-            txtLog.Clear();
-            LogInfo("📝 Deployment Log:");
-            LogInfo("==================");
-            LogInfo("Ready to deploy solutions...\n");
-        }
-
         public override void ClosingPlugin(PluginCloseInfo info)
         {
             base.ClosingPlugin(info);
@@ -626,6 +684,13 @@ namespace Sujan_Solution_Deployer
                         target.ServiceClient?.Dispose();
                     }
                     catch { }
+                }
+
+                // ✅ Properly dispose log form on plugin close
+                if (logForm != null && !logForm.IsDisposed)
+                {
+                    logForm.Close();
+                    logForm.Dispose();
                 }
                 return;
             }
@@ -650,6 +715,35 @@ namespace Sujan_Solution_Deployer
                     }
                     catch { }
                 }
+
+                // ✅ Properly dispose log form on plugin close
+                if (logForm != null && !logForm.IsDisposed)
+                {
+                    logForm.Close();
+                    logForm.Dispose();
+                }
+            }
+        }
+
+        private void tsbDeploymentLogs_Click(object sender, EventArgs e)
+        {
+            // Ensure log form exists
+            if (logForm == null || logForm.IsDisposed)
+            {
+                InitializeLogForm();
+            }
+
+            if (logForm.Visible)
+            {
+                // Hide the form (logs are preserved)
+                logForm.Hide();
+                tsbDeploymentLogs.Text = "📋 Deployment Logs";
+            }
+            else
+            {
+                // Show the form with preserved logs
+                logForm.Show(this);
+                tsbDeploymentLogs.Text = "❌ Close Logs";
             }
         }
         #endregion
