@@ -230,5 +230,120 @@ namespace Sujan_Solution_Deployer.Services
                 throw new Exception($"Error publishing customizations: {ex.Message}", ex);
             }
         }
+
+        #region ==> Deployment Histoty
+        /// <summary>
+        /// Get solution information by unique name
+        /// </summary>
+        public SolutionInfo GetSolutionByUniqueName(string uniqueName)
+        {
+            try
+            {
+                var query = new QueryExpression("solution")
+                {
+                    ColumnSet = new ColumnSet(
+                        "solutionid",
+                        "uniquename",
+                        "friendlyname",
+                        "version",
+                        "ismanaged",
+                        "installedon",
+                        "publisherid",
+                        "description"
+                    ),
+                    Criteria = new FilterExpression
+                    {
+                        Conditions =
+                {
+                    new ConditionExpression("uniquename", ConditionOperator.Equal, uniqueName)
+                }
+                    }
+                };
+
+                var solutions = _service.RetrieveMultiple(query);
+
+                if (solutions.Entities.Count == 0)
+                {
+                    return null; // Solution doesn't exist
+                }
+
+                var solution = solutions.Entities[0];
+                var publisherId = solution.GetAttributeValue<EntityReference>("publisherid");
+                var publisher = _service.Retrieve("publisher", publisherId.Id, new ColumnSet("friendlyname"));
+
+                return new SolutionInfo
+                {
+                    SolutionId = solution.Id,
+                    UniqueName = solution.GetAttributeValue<string>("uniquename"),
+                    FriendlyName = solution.GetAttributeValue<string>("friendlyname"),
+                    Version = solution.GetAttributeValue<string>("version"),
+                    IsManaged = solution.GetAttributeValue<bool>("ismanaged"),
+                    InstalledOn = solution.GetAttributeValue<DateTime>("installedon"),
+                    PublisherName = publisher.GetAttributeValue<string>("friendlyname"),
+                    Description = solution.Contains("description") ?
+                        solution.GetAttributeValue<string>("description") : string.Empty
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving solution '{uniqueName}': {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Compare version numbers
+        /// Returns: -1 if version1 < version2, 0 if equal, 1 if version1 > version2
+        /// </summary>
+        public int CompareVersions(string version1, string version2)
+        {
+            try
+            {
+                var v1 = new Version(version1);
+                var v2 = new Version(version2);
+                return v1.CompareTo(v2);
+            }
+            catch
+            {
+                return 0; // If version parsing fails, consider them equal
+            }
+        }
+
+        /// <summary>
+        /// Upgrade solution version (increment major, minor, build, or revision)
+        /// </summary>
+        public string IncrementVersion(string currentVersion, VersionIncrementType incrementType)
+        {
+            try
+            {
+                var version = new Version(currentVersion);
+
+                switch (incrementType)
+                {
+                    case VersionIncrementType.Major:
+                        return new Version(version.Major + 1, 0, 0, 0).ToString();
+                    case VersionIncrementType.Minor:
+                        return new Version(version.Major, version.Minor + 1, 0, 0).ToString();
+                    case VersionIncrementType.Build:
+                        return new Version(version.Major, version.Minor, version.Build + 1, 0).ToString();
+                    case VersionIncrementType.Revision:
+                        return new Version(version.Major, version.Minor, version.Build, version.Revision + 1).ToString();
+                    default:
+                        return currentVersion;
+                }
+            }
+            catch
+            {
+                return currentVersion;
+            }
+        }
+
+        public enum VersionIncrementType
+        {
+            Major,
+            Minor,
+            Build,
+            Revision
+        }
+        #endregion
     }
 }
