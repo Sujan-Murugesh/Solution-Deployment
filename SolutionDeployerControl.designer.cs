@@ -33,6 +33,7 @@ namespace Sujan_Solution_Deployer
             this.btnBrowseBackup = new System.Windows.Forms.Button();
             this.txtBackupPath = new System.Windows.Forms.TextBox();
             this.chkEnableBackup = new System.Windows.Forms.CheckBox();
+            this.chkDeployAsManaged = new System.Windows.Forms.CheckBox();
             this.grpDeploymentOptions = new System.Windows.Forms.GroupBox();
             this.chkOverwriteCustomizations = new System.Windows.Forms.CheckBox();
             this.chkPublishWorkflows = new System.Windows.Forms.CheckBox();
@@ -43,7 +44,9 @@ namespace Sujan_Solution_Deployer
             this.lblProgress = new System.Windows.Forms.Label();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
+            this.tsbHistory = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.tsbDeploymentLogs = new System.Windows.Forms.ToolStripButton();
             this.grpSourceEnvironment.SuspendLayout();
             this.grpTargetEnvironment.SuspendLayout();
@@ -222,12 +225,25 @@ namespace Sujan_Solution_Deployer
             this.chkEnableBackup.UseVisualStyleBackColor = true;
             this.chkEnableBackup.CheckedChanged += new System.EventHandler(this.chkEnableBackup_CheckedChanged);
             // 
+            // chkDeployAsManaged
+            // 
+            this.chkDeployAsManaged.AutoSize = true;
+            this.chkDeployAsManaged.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.chkDeployAsManaged.Location = new System.Drawing.Point(650, 30);
+            this.chkDeployAsManaged.Name = "chkDeployAsManaged";
+            this.chkDeployAsManaged.Size = new System.Drawing.Size(260, 19);
+            this.chkDeployAsManaged.TabIndex = 4;
+            this.chkDeployAsManaged.Text = "🔒 Deploy Unmanaged as Managed Solution";
+            this.chkDeployAsManaged.UseVisualStyleBackColor = true;
+            this.chkDeployAsManaged.CheckedChanged += new System.EventHandler(this.chkDeployAsManaged_CheckedChanged);
+            // 
             // grpDeploymentOptions
             // 
             this.grpDeploymentOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpDeploymentOptions.Controls.Add(this.chkOverwriteCustomizations);
             this.grpDeploymentOptions.Controls.Add(this.chkPublishWorkflows);
+            this.grpDeploymentOptions.Controls.Add(this.chkDeployAsManaged);
             this.grpDeploymentOptions.Controls.Add(this.rbUpgrade);
             this.grpDeploymentOptions.Controls.Add(this.rbUpdate);
             this.grpDeploymentOptions.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
@@ -326,7 +342,10 @@ namespace Sujan_Solution_Deployer
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsbClose,
             this.toolStripSeparator1,
-            this.tsbDeploymentLogs});
+            this.tsbDeploymentLogs,
+            this.toolStripSeparator2,
+            this.tsbHistory,
+            });
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.Size = new System.Drawing.Size(1020, 25);
@@ -340,11 +359,25 @@ namespace Sujan_Solution_Deployer
             this.tsbClose.Size = new System.Drawing.Size(56, 22);
             this.tsbClose.Text = "Close";
             this.tsbClose.Click += new System.EventHandler(this.tsbClose_Click);
+            //
+            // tsbHistory
+            // 
+            this.tsbHistory.Image = null;
+            this.tsbHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbHistory.Name = "tsbHistory";
+            this.tsbHistory.Size = new System.Drawing.Size(85, 22);
+            this.tsbHistory.Text = "📜 History";
+            this.tsbHistory.Click += new System.EventHandler(this.tsbHistory_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
             // tsbDeploymentLogs
             // 
@@ -382,8 +415,6 @@ namespace Sujan_Solution_Deployer
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
-
-
         }
 
         #endregion
@@ -413,6 +444,9 @@ namespace Sujan_Solution_Deployer
         private System.Windows.Forms.ToolStrip toolStrip;
         private System.Windows.Forms.ToolStripButton tsbClose;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton tsbDeploymentLogs;
+        private System.Windows.Forms.CheckBox chkDeployAsManaged;
+        private System.Windows.Forms.ToolStripButton tsbHistory;
     }
 }
