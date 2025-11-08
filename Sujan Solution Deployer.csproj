@@ -261,6 +261,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeploymentHistoryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DeploymentHistoryForm.Designer.cs">
+      <DependentUpon>DeploymentHistoryForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DeploymentLogForm.cs">
       <SubType>Form</SubType>
     </Compile>
