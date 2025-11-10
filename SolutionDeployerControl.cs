@@ -6,6 +6,7 @@ using Sujan_Solution_Deployer.Models;
 using Sujan_Solution_Deployer.Services;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -46,7 +47,10 @@ namespace Sujan_Solution_Deployer
             if (logForm == null || logForm.IsDisposed)
             {
                 logForm = new DeploymentLogForm();
-                // Don't set FormClosed event - we want to keep the form alive
+                logForm.FormHidden += (s, e) =>
+                {
+                    tsbDeploymentLogs.Text = "📋 Deployment Logs";
+                };
             }
         }
 
@@ -255,7 +259,7 @@ namespace Sujan_Solution_Deployer
 
         private void btnDeploy_Click(object sender, EventArgs e)
         {
-            // Validate selections
+            // Step 1: Validate selections
             var selectedSolutions = GetSelectedSolutions();
             if (selectedSolutions.Count == 0)
             {
@@ -279,60 +283,85 @@ namespace Sujan_Solution_Deployer
                 return;
             }
 
-            // Confirm deployment
-            var confirmMessage = $"🚀 DEPLOYMENT CONFIRMATION\n\n" +
-                               $"You are about to deploy {selectedSolutions.Count} solution(s) to {selectedTargets.Count} environment(s).\n\n" +
-                               $"📦 Solutions to Deploy:\n";
-
-            foreach (var sol in selectedSolutions)
+            // Step 2: Show Version Increment Dialog
+            var versionForm = new VersionIncrementForm(selectedSolutions, solutionService);
+            if (versionForm.ShowDialog(this) != DialogResult.OK)
             {
-                confirmMessage += $"   • {sol.FriendlyName} (v{sol.Version}) - {(sol.IsManaged ? "Managed" : "Unmanaged")}\n";
+                return; // User cancelled
             }
 
-            confirmMessage += $"\n🎯 Target Environments:\n";
-            foreach (var target in selectedTargets)
-            {
-                confirmMessage += $"   • {target.Name}\n";
-            }
+            var updatedVersions = versionForm.UpdatedVersions;
+            var updateInSource = versionForm.UpdateInSource;
 
-            confirmMessage += $"\n⚙️ Settings:\n";
-            confirmMessage += $"   • Deployment Type: {(rbUpgrade.Checked ? "Upgrade" : "Update")}\n";
-            confirmMessage += $"   • Backup Enabled: {(chkEnableBackup.Checked ? "Yes" : "No")}\n";
-            confirmMessage += $"   • Publish Workflows: {(chkPublishWorkflows.Checked ? "Yes" : "No")}\n";
-            confirmMessage += $"   • Overwrite Customizations: {(chkOverwriteCustomizations.Checked ? "Yes" : "No")}\n";
-            confirmMessage += $"\n⚠️ This operation cannot be undone!\n\nDo you want to proceed?";
-
-            if (MessageBox.Show(confirmMessage, "Confirm Deployment",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                StartDeployment(selectedSolutions, selectedTargets);
-            }
-
-            // ✅ Open log window automatically
+            // Step 3: Open log window automatically
             if (logForm == null || logForm.IsDisposed)
             {
                 InitializeLogForm();
             }
 
-            // Show the window (will preserve existing logs if reopened)
             if (!logForm.Visible)
             {
                 logForm.Show(this);
                 tsbDeploymentLogs.Text = "❌ Close Logs";
             }
-            //if (logForm == null || logForm.IsDisposed)
-            //{
-            //    logForm = new DeploymentLogForm();
-            //    logForm.FormClosed += (s, args) =>
-            //    {
-            //        logForm = null;
-            //        tsbDeploymentLogs.Text = "📋 Deployment Logs";
-            //    };
-            //}
 
-            //logForm.Show(this);
-            //logForm.ClearLog();
-            //tsbDeploymentLogs.Text = "❌ Close Logs";
+            // Step 4: Build confirmation message with version information
+            var confirmMessage = BuildConfirmationMessage(selectedSolutions, selectedTargets, updatedVersions, updateInSource);
+
+            // Step 5: Confirm and start deployment
+            if (MessageBox.Show(confirmMessage, "Confirm Deployment",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                StartDeployment(selectedSolutions, selectedTargets, updatedVersions, updateInSource);
+            }
+        }
+
+        private string BuildConfirmationMessage(
+            List<SolutionInfo> solutions,
+            List<DeploymentTarget> targets,
+            Dictionary<string, string> updatedVersions,
+            bool updateInSource)
+        {
+            var confirmMessage = "🚀 DEPLOYMENT CONFIRMATION\n\n";
+            confirmMessage += $"You are about to deploy {solutions.Count} solution(s) to {targets.Count} environment(s).\n\n";
+            confirmMessage += "📦 Solutions to Deploy:\n";
+
+            foreach (var sol in solutions)
+            {
+                var currentVersion = sol.Version;
+                var newVersion = updatedVersions.ContainsKey(sol.UniqueName) ? updatedVersions[sol.UniqueName] : currentVersion;
+                var versionChange = currentVersion != newVersion ? $" → v{newVersion}" : "";
+                var managedLabel = sol.IsManaged ? "Managed" : "Unmanaged";
+
+                confirmMessage += $"   • {sol.FriendlyName} (v{currentVersion}{versionChange}) - {managedLabel}\n";
+            }
+
+            confirmMessage += "\n🎯 Target Environments:\n";
+            foreach (var target in targets)
+            {
+                confirmMessage += $"   • {target.Name}\n";
+            }
+
+            confirmMessage += "\n⚙️ Settings:\n";
+            confirmMessage += $"   • Deployment Type: {(rbUpgrade.Checked ? "Upgrade" : "Update")}\n";
+            confirmMessage += $"   • Update Source Versions: {(updateInSource ? "Yes" : "No")}\n";
+            confirmMessage += $"   • Backup Enabled: {(chkEnableBackup.Checked ? "Yes" : "No")}\n";
+            confirmMessage += $"   • Publish Workflows: {(chkPublishWorkflows.Checked ? "Yes" : "No")}\n";
+            confirmMessage += $"   • Overwrite Customizations: {(chkOverwriteCustomizations.Checked ? "Yes" : "No")}\n";
+
+            if (chkDeployAsManaged.Checked)
+            {
+                var unmanagedCount = solutions.Count(s => !s.IsManaged);
+                if (unmanagedCount > 0)
+                {
+                    confirmMessage += $"   • Deploy as Managed: Yes ({unmanagedCount} unmanaged solution(s) will be converted)\n";
+                }
+            }
+
+            confirmMessage += "\n⚠️ This operation cannot be undone!\n\n";
+            confirmMessage += "Do you want to proceed?";
+
+            return confirmMessage;
         }
 
         private List<SolutionInfo> GetSelectedSolutions()
@@ -378,8 +407,14 @@ namespace Sujan_Solution_Deployer
             return selected;
         }
 
-        private void StartDeployment(List<SolutionInfo> solutions, List<DeploymentTarget> targets)
-        {   // ✅ Mark deployment as in progress
+        #region ==>Start Deployment and Logging
+        private void StartDeployment(
+            List<SolutionInfo> solutions,
+            List<DeploymentTarget> targets,
+            Dictionary<string, string> updatedVersions,
+            bool updateInSource)
+        {
+            // Mark deployment as in progress
             if (logForm != null && !logForm.IsDisposed)
             {
                 logForm.SetDeploymentInProgress(true);
@@ -393,7 +428,7 @@ namespace Sujan_Solution_Deployer
             progressBar.Value = 0;
             progressBar.Maximum = 100;
 
-            // ✅ Add separator for new deployment
+            // Log deployment start
             LogInfo("\n\n" + new string('=', 60));
             LogInfo($"🆕 NEW DEPLOYMENT SESSION - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             LogInfo(new string('=', 60));
@@ -405,6 +440,7 @@ namespace Sujan_Solution_Deployer
             LogInfo($"⚙️ Deployment Mode: {(rbUpgrade.Checked ? "Upgrade" : "Update")}");
             LogInfo($"💾 Backup: {(chkEnableBackup.Checked ? "Enabled" : "Disabled")}");
             LogInfo($"🔒 Deploy as Managed: {(chkDeployAsManaged.Checked ? "Yes" : "No")}");
+            LogInfo($"🔢 Update Source Versions: {(updateInSource ? "Yes" : "No")}");
             LogInfo("==========================================\n");
 
             WorkAsync(new WorkAsyncInfo
@@ -412,20 +448,64 @@ namespace Sujan_Solution_Deployer
                 Message = "Deploying solutions...",
                 Work = (worker, args) =>
                 {
-                    var totalOperations = solutions.Count * (targets.Count + 1); // +1 for export/backup
+                    var totalOperations = solutions.Count * (targets.Count + 1);
                     var completedOperations = 0;
                     var deploymentStartTime = DateTime.Now;
 
                     foreach (var solution in solutions)
                     {
                         var solutionStartTime = DateTime.Now;
+                        string deploymentVersion = solution.Version;
 
                         try
                         {
                             worker.ReportProgress(0, $"\n📦 Processing: {solution.FriendlyName}");
                             worker.ReportProgress(0, new string('-', 50));
 
-                            // Determine if we should export as managed
+                            // Step 0: Update version in source if requested
+                            if (updateInSource && updatedVersions.ContainsKey(solution.UniqueName))
+                            {
+                                var newVersion = updatedVersions[solution.UniqueName];
+
+                                if (newVersion != solution.Version)
+                                {
+                                    worker.ReportProgress(0, $"🔢 Updating version in source: {solution.Version} → {newVersion}");
+
+                                    try
+                                    {
+                                        if (!solution.IsManaged)
+                                        {
+                                            solutionService.UpdateSolutionVersion(
+                                                solution.UniqueName,
+                                                newVersion,
+                                                (msg) => worker.ReportProgress(0, $"   {msg}"));
+
+                                            deploymentVersion = newVersion;
+                                            solution.Version = newVersion;
+
+                                            worker.ReportProgress(0, $"✅ Version updated in source environment");
+                                        }
+                                        else
+                                        {
+                                            worker.ReportProgress(0, $"⚠️ Cannot update version of managed solution in source");
+                                            deploymentVersion = solution.Version;
+                                        }
+                                    }
+                                    catch (Exception versionEx)
+                                    {
+                                        worker.ReportProgress(0, $"⚠️ Warning: Could not update version in source: {versionEx.Message}");
+                                        worker.ReportProgress(0, $"   Continuing with current version: {solution.Version}");
+                                        deploymentVersion = solution.Version;
+                                    }
+                                }
+                            }
+                            else if (updatedVersions.ContainsKey(solution.UniqueName))
+                            {
+                                deploymentVersion = updatedVersions[solution.UniqueName];
+                                worker.ReportProgress(0, $"📋 Using version for deployment: {deploymentVersion}");
+                            }
+
+                            // Determine export type
                             bool exportAsManaged = rbUpgrade.Checked ? true : solution.IsManaged;
                             bool deployingAsManaged = chkDeployAsManaged.Checked && !solution.IsManaged;
 
@@ -453,9 +533,9 @@ namespace Sujan_Solution_Deployer
                             {
                                 worker.ReportProgress(0, $"💾 Creating backup: {solution.FriendlyName}");
 
-                                // If deploying as managed, backup both unmanaged and managed versions
                                 if (deployingAsManaged)
                                 {
+                                    // Backup both versions
                                     worker.ReportProgress(0, $"   📦 Backing up unmanaged version...");
                                     var unmanagedBackup = solutionService.BackupSolution(
                                         solution.UniqueName,
@@ -488,171 +568,9 @@ namespace Sujan_Solution_Deployer
                             // Step 3: Deploy to each target
                             foreach (var target in targets)
                             {
-                                var targetDeploymentStart = DateTime.Now;
-                                string errorMessage = null;
-                                DeploymentStatus status = DeploymentStatus.Queued;
-                                string targetVersion = null;
-
-                                try
-                                {
-                                    worker.ReportProgress(
-                                        (int)((double)completedOperations / totalOperations * 100),
-                                        $"\n🎯 Deploying to: {target.Name}");
-
-                                    // Check if solution exists in target
-                                    worker.ReportProgress(0, $"   🔍 Checking target environment...");
-
-                                    IOrganizationService targetService = null;
-
-                                    if (target.ServiceClient == null || !target.ServiceClient.IsReady)
-                                    {
-                                        worker.ReportProgress(0, $"   🔄 Reconnecting to {target.Name}...");
-                                        target.ServiceClient = ConnectionManager.CreateServiceClient(target.ConnectionDetail);
-                                    }
-
-                                    if (target.ServiceClient.OrganizationWebProxyClient != null)
-                                    {
-                                        targetService = target.ServiceClient.OrganizationWebProxyClient;
-                                        target.ServiceClient.OrganizationWebProxyClient.InnerChannel.OperationTimeout = new TimeSpan(0, 20, 0);
-                                    }
-                                    else if (target.ServiceClient.OrganizationServiceProxy != null)
-                                    {
-                                        targetService = target.ServiceClient.OrganizationServiceProxy;
-                                        target.ServiceClient.OrganizationServiceProxy.Timeout = new TimeSpan(0, 20, 0);
-                                    }
-                                    else
-                                    {
-                                        throw new Exception("Unable to get organization service from connection");
-                                    }
-
-                                    worker.ReportProgress(0, $"   ✅ Connection verified to {target.Name}");
-
-                                    var targetSolutionService = new SolutionService(targetService);
-
-                                    // Check if solution already exists
-                                    var existingSolution = targetSolutionService.GetSolutionByUniqueName(solution.UniqueName);
-
-                                    if (existingSolution != null)
-                                    {
-                                        worker.ReportProgress(0, $"   📋 Existing solution found: v{existingSolution.Version}");
-
-                                        // Compare versions
-                                        int versionComparison = targetSolutionService.CompareVersions(solution.Version, existingSolution.Version);
-
-                                        if (versionComparison < 0)
-                                        {
-                                            worker.ReportProgress(0, $"   ⚠️ WARNING: Downgrade detected! Target v{existingSolution.Version} > Source v{solution.Version}");
-                                        }
-                                        else if (versionComparison == 0)
-                                        {
-                                            worker.ReportProgress(0, $"   ℹ️ Same version detected: v{solution.Version}");
-                                        }
-                                        else
-                                        {
-                                            worker.ReportProgress(0, $"   ⬆️ Upgrade: v{existingSolution.Version} → v{solution.Version}");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        worker.ReportProgress(0, $"   🆕 New solution - will be installed");
-                                    }
-
-                                    // Import solution
-                                    worker.ReportProgress(0, $"   📥 Importing {solution.FriendlyName}...");
-                                    var importJobId = targetSolutionService.ImportSolution(
-                                        solutionFile,
-                                        chkPublishWorkflows.Checked,
-                                        chkOverwriteCustomizations.Checked,
-                                        (msg) => worker.ReportProgress(0, $"      {msg}"));
-
-                                    // Monitor import progress
-                                    worker.ReportProgress(0, $"   ⏳ Monitoring import progress...");
-                                    bool importCompleted = false;
-                                    int maxRetries = 240; // 20 minutes (5 seconds * 240)
-                                    int retryCount = 0;
-                                    double lastProgress = 0;
-
-                                    while (!importCompleted && retryCount < maxRetries)
-                                    {
-                                        Thread.Sleep(5000);
-
-                                        var (importStatus, progress, isCompleted) = targetSolutionService.GetImportJobStatus(importJobId);
-
-                                        if (progress != lastProgress || isCompleted)
-                                        {
-                                            worker.ReportProgress(0, $"   📊 Import Progress: {progress:F0}% - {importStatus}");
-                                            lastProgress = progress;
-                                        }
-
-                                        importCompleted = isCompleted;
-                                        retryCount++;
-                                    }
-
-                                    if (importCompleted)
-                                    {
-                                        // Get the updated solution version
-                                        var updatedSolution = targetSolutionService.GetSolutionByUniqueName(solution.UniqueName);
-                                        targetVersion = updatedSolution?.Version ?? solution.Version;
-
-                                        worker.ReportProgress(0, $"   ✅ Successfully deployed {solution.FriendlyName} to {target.Name}");
-                                        status = DeploymentStatus.Completed;
-                                    }
-                                    else
-                                    {
-                                        worker.ReportProgress(0, $"   ⚠️ Import timeout for {target.Name}. The import may still be processing.");
-                                        status = DeploymentStatus.Failed;
-                                        errorMessage = "Import timeout - may still be processing";
-                                        targetVersion = solution.Version;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    worker.ReportProgress(0, $"   ❌ Error deploying to {target.Name}: {ex.Message}");
-
-                                    if (ex.InnerException != null)
-                                    {
-                                        worker.ReportProgress(0, $"      Inner Exception: {ex.InnerException.Message}");
-                                    }
-
-                                    status = DeploymentStatus.Failed;
-                                    errorMessage = ex.Message;
-                                    targetVersion = solution.Version;
-                                }
-
-                                // ✅ Save deployment history
-                                var targetDeploymentEnd = DateTime.Now;
-                                var duration = (int)(targetDeploymentEnd - targetDeploymentStart).TotalSeconds;
-
-                                var history = new DeploymentHistory
-                                {
-                                    DeploymentDate = targetDeploymentStart,
-                                    SolutionUniqueName = solution.UniqueName,
-                                    SolutionFriendlyName = solution.FriendlyName,
-                                    SourceVersion = solution.Version,
-                                    TargetVersion = targetVersion,
-                                    SourceEnvironment = ConnectionDetail?.ConnectionName ?? "Unknown",
-                                    TargetEnvironment = target.Name,
-                                    IsManaged = solution.IsManaged,
-                                    DeployedAsManaged = deployingAsManaged || exportAsManaged,
-                                    Status = status,
-                                    DeployedBy = Environment.UserName,
-                                    ErrorMessage = errorMessage,
-                                    DurationSeconds = duration,
-                                    BackupCreated = chkEnableBackup.Checked,
-                                    BackupPath = backupPath
-                                };
-
-                                try
-                                {
-                                    deploymentHistoryService.AddDeployment(history);
-                                    worker.ReportProgress(0, $"   💾 Deployment history saved");
-                                }
-                                catch (Exception historyEx)
-                                {
-                                    worker.ReportProgress(0, $"   ⚠️ Could not save history: {historyEx.Message}");
-                                }
-
-                                completedOperations++;
+                                DeployToTarget(worker, solution, target, solutionFile, deploymentVersion,
+                                             exportAsManaged, deployingAsManaged, backupPath,
+                                             ref completedOperations, totalOperations);
                             }
                         }
                         catch (Exception ex)
@@ -660,40 +578,13 @@ namespace Sujan_Solution_Deployer
                             worker.ReportProgress(0, $"❌ Error processing {solution.FriendlyName}: {ex.Message}");
                             completedOperations += targets.Count;
 
-                            // ✅ Save failed deployment history for all targets
-                            var solutionEndTime = DateTime.Now;
-                            var duration = (int)(solutionEndTime - solutionStartTime).TotalSeconds;
-
-                            foreach (var target in targets)
-                            {
-                                var history = new DeploymentHistory
-                                {
-                                    DeploymentDate = solutionStartTime,
-                                    SolutionUniqueName = solution.UniqueName,
-                                    SolutionFriendlyName = solution.FriendlyName,
-                                    SourceVersion = solution.Version,
-                                    TargetVersion = solution.Version,
-                                    SourceEnvironment = ConnectionDetail?.ConnectionName ?? "Unknown",
-                                    TargetEnvironment = target.Name,
-                                    IsManaged = solution.IsManaged,
-                                    DeployedAsManaged = chkDeployAsManaged.Checked && !solution.IsManaged,
-                                    Status = DeploymentStatus.Failed,
-                                    DeployedBy = Environment.UserName,
-                                    ErrorMessage = ex.Message,
-                                    DurationSeconds = duration,
-                                    BackupCreated = false,
-                                    BackupPath = null
-                                };
-
-                                try
-                                {
-                                    deploymentHistoryService.AddDeployment(history);
-                                }
-                                catch { }
-                            }
+                            // Save failed history
+                            SaveFailedDeploymentHistory(solution, targets, deploymentVersion,
+                                                       ex.Message, solutionStartTime);
                         }
                     }
 
+                    // Log completion
                     var deploymentEndTime = DateTime.Now;
                     var totalDuration = deploymentEndTime - deploymentStartTime;
 
@@ -721,18 +612,15 @@ namespace Sujan_Solution_Deployer
                 {
                     // Re-enable UI
                     btnDeploy.Enabled = true;
-                    btnLoadSolutions.Enabled = false;
+                    btnLoadSolutions.Enabled = true;
                     btnAddTarget.Enabled = true;
                     btnRemoveTarget.Enabled = true;
                     progressBar.Value = 100;
 
-                    // ✅ Mark deployment as completed
                     if (logForm != null && !logForm.IsDisposed)
                     {
                         logForm.SetDeploymentInProgress(false);
                     }
-
-                    tsbDeploymentLogs.Text = "📋 Deployment Logs";
 
                     if (args.Error != null)
                     {
@@ -754,6 +642,267 @@ namespace Sujan_Solution_Deployer
                 }
             });
         }
+
+        private void DeployToTarget(
+            BackgroundWorker worker,
+            SolutionInfo solution,
+            DeploymentTarget target,
+            byte[] solutionFile,
+            string deploymentVersion,
+            bool exportAsManaged,
+            bool deployingAsManaged,
+            string backupPath,
+            ref int completedOperations,
+            int totalOperations)
+        {
+            var targetDeploymentStart = DateTime.Now;
+            string errorMessage = null;
+            DeploymentStatus status = DeploymentStatus.Queued;
+            string targetVersion = null;
+
+            try
+            {
+                worker.ReportProgress(
+                    (int)((double)completedOperations / totalOperations * 100),
+                    $"\n🎯 Deploying to: {target.Name}");
+
+                worker.ReportProgress(0, $"   🔍 Checking target environment...");
+
+                // Get target service
+                IOrganizationService targetService = GetTargetService(target, worker);
+                var targetSolutionService = new SolutionService(targetService);
+
+                // Check existing solution
+                var existingSolution = targetSolutionService.GetSolutionByUniqueName(solution.UniqueName);
+                CheckVersionComparison(worker, solution, existingSolution, deploymentVersion);
+
+                // Import solution
+                worker.ReportProgress(0, $"   📥 Importing {solution.FriendlyName} v{deploymentVersion}...");
+                var importJobId = targetSolutionService.ImportSolution(
+                    solutionFile,
+                    chkPublishWorkflows.Checked,
+                    chkOverwriteCustomizations.Checked,
+                    (msg) => worker.ReportProgress(0, $"      {msg}"));
+
+                // Monitor import
+                bool importCompleted = MonitorImport(worker, targetSolutionService, importJobId);
+
+                if (importCompleted)
+                {
+                    var updatedSolution = targetSolutionService.GetSolutionByUniqueName(solution.UniqueName);
+                    targetVersion = updatedSolution?.Version ?? deploymentVersion;
+
+                    worker.ReportProgress(0, $"   ✅ Successfully deployed {solution.FriendlyName} v{targetVersion} to {target.Name}");
+                    status = DeploymentStatus.Completed;
+                }
+                else
+                {
+                    worker.ReportProgress(0, $"   ⚠️ Import timeout for {target.Name}");
+                    status = DeploymentStatus.Failed;
+                    errorMessage = "Import timeout - may still be processing";
+                    targetVersion = deploymentVersion;
+                }
+            }
+            catch (Exception ex)
+            {
+                worker.ReportProgress(0, $"   ❌ Error deploying to {target.Name}: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    worker.ReportProgress(0, $"      Inner Exception: {ex.InnerException.Message}");
+                }
+
+                status = DeploymentStatus.Failed;
+                errorMessage = ex.Message;
+                targetVersion = deploymentVersion;
+            }
+
+            // Save history
+            SaveDeploymentHistory(solution, target, deploymentVersion, targetVersion, status,
+                                 errorMessage, targetDeploymentStart, backupPath, exportAsManaged, deployingAsManaged);
+
+            completedOperations++;
+        }
+
+        private IOrganizationService GetTargetService(
+            DeploymentTarget target, 
+            BackgroundWorker worker)
+        {
+            if (target.ServiceClient == null || !target.ServiceClient.IsReady)
+            {
+                worker.ReportProgress(0, $"   🔄 Reconnecting to {target.Name}...");
+                target.ServiceClient = ConnectionManager.CreateServiceClient(target.ConnectionDetail);
+            }
+
+            IOrganizationService targetService = null;
+
+            if (target.ServiceClient.OrganizationWebProxyClient != null)
+            {
+                targetService = target.ServiceClient.OrganizationWebProxyClient;
+                target.ServiceClient.OrganizationWebProxyClient.InnerChannel.OperationTimeout = new TimeSpan(0, 20, 0);
+            }
+            else if (target.ServiceClient.OrganizationServiceProxy != null)
+            {
+                targetService = target.ServiceClient.OrganizationServiceProxy;
+                target.ServiceClient.OrganizationServiceProxy.Timeout = new TimeSpan(0, 20, 0);
+            }
+            else
+            {
+                throw new Exception("Unable to get organization service from connection");
+            }
+
+            worker.ReportProgress(0, $"   ✅ Connection verified to {target.Name}");
+            return targetService;
+        }
+
+        private void CheckVersionComparison(
+            BackgroundWorker worker, 
+            SolutionInfo solution,
+            SolutionInfo existingSolution, 
+            string deploymentVersion)
+        {
+            if (existingSolution != null)
+            {
+                worker.ReportProgress(0, $"   📋 Existing solution found: v{existingSolution.Version}");
+
+                int versionComparison = solutionService.CompareVersions(deploymentVersion, existingSolution.Version);
+
+                if (versionComparison < 0)
+                {
+                    worker.ReportProgress(0, $"   ⚠️ WARNING: Downgrade detected!");
+                    worker.ReportProgress(0, $"   📉 Target v{existingSolution.Version} > Deploying v{deploymentVersion}");
+                }
+                else if (versionComparison == 0)
+                {
+                    worker.ReportProgress(0, $"   ℹ️ Same version detected: v{deploymentVersion}");
+                }
+                else
+                {
+                    worker.ReportProgress(0, $"   ⬆️ Upgrade: v{existingSolution.Version} → v{deploymentVersion}");
+                }
+            }
+            else
+            {
+                worker.ReportProgress(0, $"   🆕 New solution - will be installed as v{deploymentVersion}");
+            }
+        }
+
+        private bool MonitorImport(
+            BackgroundWorker worker, 
+            SolutionService targetSolutionService, 
+            Guid importJobId)
+        {
+            worker.ReportProgress(0, $"   ⏳ Monitoring import progress...");
+
+            bool importCompleted = false;
+            int maxRetries = 240;
+            int retryCount = 0;
+            double lastProgress = 0;
+
+            while (!importCompleted && retryCount < maxRetries)
+            {
+                Thread.Sleep(5000);
+
+                var importStatus = targetSolutionService.GetImportJobStatus(importJobId);
+                var status = importStatus.Item1;
+                var progress = importStatus.Item2;
+                var isCompleted = importStatus.Item3;
+
+                if (progress != lastProgress || isCompleted)
+                {
+                    worker.ReportProgress(0, $"   📊 Import Progress: {progress:F0}% - {status}");
+                    lastProgress = progress;
+                }
+
+                importCompleted = isCompleted;
+                retryCount++;
+            }
+
+            return importCompleted;
+        }
+
+        private void SaveDeploymentHistory(
+            SolutionInfo solution,
+            DeploymentTarget target,
+            string sourceVersion,
+            string targetVersion,
+            DeploymentStatus status,
+            string errorMessage,
+            DateTime startTime,
+            string backupPath,
+            bool exportAsManaged,
+            bool deployingAsManaged)
+        {
+            var endTime = DateTime.Now;
+            var duration = (int)(endTime - startTime).TotalSeconds;
+
+            var history = new DeploymentHistory
+            {
+                DeploymentDate = startTime,
+                SolutionUniqueName = solution.UniqueName,
+                SolutionFriendlyName = solution.FriendlyName,
+                SourceVersion = sourceVersion,
+                TargetVersion = targetVersion,
+                SourceEnvironment = ConnectionDetail?.ConnectionName ?? "Unknown",
+                TargetEnvironment = target.Name,
+                IsManaged = solution.IsManaged,
+                DeployedAsManaged = deployingAsManaged || exportAsManaged,
+                Status = status,
+                DeployedBy = Environment.UserName,
+                ErrorMessage = errorMessage,
+                DurationSeconds = duration,
+                BackupCreated = chkEnableBackup.Checked,
+                BackupPath = backupPath
+            };
+
+            try
+            {
+                deploymentHistoryService.AddDeployment(history);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Could not save history: {ex.Message}");
+            }
+        }
+
+        private void SaveFailedDeploymentHistory(
+            SolutionInfo solution,
+            List<DeploymentTarget> targets,
+            string version,
+            string errorMessage,
+            DateTime startTime)
+        {
+            var endTime = DateTime.Now;
+            var duration = (int)(endTime - startTime).TotalSeconds;
+
+            foreach (var target in targets)
+            {
+                var history = new DeploymentHistory
+                {
+                    DeploymentDate = startTime,
+                    SolutionUniqueName = solution.UniqueName,
+                    SolutionFriendlyName = solution.FriendlyName,
+                    SourceVersion = solution.Version,
+                    TargetVersion = version,
+                    SourceEnvironment = ConnectionDetail?.ConnectionName ?? "Unknown",
+                    TargetEnvironment = target.Name,
+                    IsManaged = solution.IsManaged,
+                    DeployedAsManaged = chkDeployAsManaged.Checked && !solution.IsManaged,
+                    Status = DeploymentStatus.Failed,
+                    DeployedBy = Environment.UserName,
+                    ErrorMessage = errorMessage,
+                    DurationSeconds = duration,
+                    BackupCreated = false,
+                    BackupPath = null
+                };
+
+                try
+                {
+                    deploymentHistoryService.AddDeployment(history);
+                }
+                catch { }
+            }
+        }
+        #endregion
 
         private void LogInfo(string message)
         {   // Log to log form if it exists
@@ -926,6 +1075,64 @@ namespace Sujan_Solution_Deployer
             {
                 MessageBox.Show($"Error opening deployment history:\n{ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tsbRefresh_Click(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show(
+                "This will clear all loaded solutions and target environments.\n\n" +
+                "Are you sure you want to refresh?",
+                "Confirm Refresh",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+            {
+                RefreshAll();
+            }
+        }
+
+        private void RefreshAll()
+        {
+            try
+            {
+                // Clear solutions
+                chkUnmanagedSolutions.Items.Clear();
+                chkManagedSolutions.Items.Clear();
+                unmanagedSolutions.Clear();
+                managedSolutions.Clear();
+
+                // Clear target environments
+                chkTargetEnvironments.Items.Clear();
+                foreach (var target in targetEnvironments)
+                {
+                    try
+                    {
+                        target.ServiceClient?.Dispose();
+                    }
+                    catch { }
+                }
+                targetEnvironments.Clear();
+
+                // Reset progress
+                progressBar.Value = 0;
+                lblProgress.Text = "📊 Deployment Progress: 0%";
+                lblProgress.ForeColor = Color.Black;
+
+                // Enable buttons
+                btnLoadSolutions.Enabled = true;
+                btnDeploy.Enabled = true;
+
+                ShowInfoNotification("✅ Refreshed successfully! Ready for new deployment.", null);
+
+                MessageBox.Show("All data cleared. Ready for new deployment setup.",
+                    "Refresh Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error during refresh: {ex.Message}",
+                    "Refresh Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         #endregion

@@ -232,9 +232,6 @@ namespace Sujan_Solution_Deployer.Services
         }
 
         #region ==> Deployment Histoty
-        /// <summary>
-        /// Get solution information by unique name
-        /// </summary>
         public SolutionInfo GetSolutionByUniqueName(string uniqueName)
         {
             try
@@ -290,10 +287,6 @@ namespace Sujan_Solution_Deployer.Services
             }
         }
 
-        /// <summary>
-        /// Compare version numbers
-        /// Returns: -1 if version1 < version2, 0 if equal, 1 if version1 > version2
-        /// </summary>
         public int CompareVersions(string version1, string version2)
         {
             try
@@ -307,32 +300,42 @@ namespace Sujan_Solution_Deployer.Services
                 return 0; // If version parsing fails, consider them equal
             }
         }
-
-        /// <summary>
-        /// Upgrade solution version (increment major, minor, build, or revision)
-        /// </summary>
         public string IncrementVersion(string currentVersion, VersionIncrementType incrementType)
         {
             try
             {
                 var version = new Version(currentVersion);
 
+                // ✅ Add debug logging
+                System.Diagnostics.Debug.WriteLine($"IncrementVersion called: current={currentVersion}, type={incrementType}");
+
+                string newVersion = currentVersion;
+
                 switch (incrementType)
                 {
                     case VersionIncrementType.Major:
-                        return new Version(version.Major + 1, 0, 0, 0).ToString();
+                        newVersion = new Version(version.Major + 1, 0, 0, 0).ToString();
+                        break;
                     case VersionIncrementType.Minor:
-                        return new Version(version.Major, version.Minor + 1, 0, 0).ToString();
+                        newVersion = new Version(version.Major, version.Minor + 1, 0, 0).ToString();
+                        break;
                     case VersionIncrementType.Build:
-                        return new Version(version.Major, version.Minor, version.Build + 1, 0).ToString();
+                        newVersion = new Version(version.Major, version.Minor, version.Build + 1, 0).ToString();
+                        break;
                     case VersionIncrementType.Revision:
-                        return new Version(version.Major, version.Minor, version.Build, version.Revision + 1).ToString();
+                        newVersion = new Version(version.Major, version.Minor, version.Build, version.Revision + 1).ToString();
+                        break;
                     default:
-                        return currentVersion;
+                        newVersion = currentVersion;
+                        break;
                 }
+
+                System.Diagnostics.Debug.WriteLine($"IncrementVersion result: {newVersion}");
+                return newVersion;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"IncrementVersion error: {ex.Message}");
                 return currentVersion;
             }
         }
@@ -343,6 +346,52 @@ namespace Sujan_Solution_Deployer.Services
             Minor,
             Build,
             Revision
+        }
+
+        public void UpdateSolutionVersion(string solutionUniqueName, string newVersion, Action<string> progressCallback = null)
+        {
+            try
+            {
+                progressCallback?.Invoke($"Updating solution version: {solutionUniqueName} to v{newVersion}");
+
+                // Get the solution
+                var query = new QueryExpression("solution")
+                {
+                    ColumnSet = new ColumnSet("solutionid", "uniquename"),
+                    Criteria = new FilterExpression
+                    {
+                        Conditions =
+                {
+                    new ConditionExpression("uniquename", ConditionOperator.Equal, solutionUniqueName),
+                    new ConditionExpression("ismanaged", ConditionOperator.Equal, false)
+                }
+                    }
+                };
+
+                var solutions = _service.RetrieveMultiple(query);
+
+                if (solutions.Entities.Count == 0)
+                {
+                    throw new Exception($"Unmanaged solution '{solutionUniqueName}' not found");
+                }
+
+                var solution = solutions.Entities[0];
+
+                // Update the version
+                var updateSolution = new Entity("solution")
+                {
+                    Id = solution.Id
+                };
+                updateSolution["version"] = newVersion;
+
+                _service.Update(updateSolution);
+
+                progressCallback?.Invoke($"✅ Version updated successfully to v{newVersion}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error updating solution version: {ex.Message}", ex);
+            }
         }
         #endregion
     }
