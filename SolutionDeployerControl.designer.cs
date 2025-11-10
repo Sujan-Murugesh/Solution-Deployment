@@ -47,7 +47,9 @@ namespace Sujan_Solution_Deployer
             this.tsbHistory = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.tsbDeploymentLogs = new System.Windows.Forms.ToolStripButton();
+            this.tsbRefresh = new System.Windows.Forms.ToolStripButton();
             this.grpSourceEnvironment.SuspendLayout();
             this.grpTargetEnvironment.SuspendLayout();
             this.grpBackup.SuspendLayout();
@@ -345,6 +347,8 @@ namespace Sujan_Solution_Deployer
             this.tsbDeploymentLogs,
             this.toolStripSeparator2,
             this.tsbHistory,
+            this.toolStripSeparator3,
+            this.tsbRefresh
             });
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
@@ -369,6 +373,15 @@ namespace Sujan_Solution_Deployer
             this.tsbHistory.Text = "📜 History";
             this.tsbHistory.Click += new System.EventHandler(this.tsbHistory_Click);
             // 
+            // tsbRefresh
+            // 
+            this.tsbRefresh.Image = null;
+            this.tsbRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbRefresh.Name = "tsbRefresh";
+            this.tsbRefresh.Size = new System.Drawing.Size(70, 22);
+            this.tsbRefresh.Text = "🔄 Refresh";
+            this.tsbRefresh.Click += new System.EventHandler(this.tsbRefresh_Click);
+            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
@@ -378,6 +391,11 @@ namespace Sujan_Solution_Deployer
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            //
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
             // 
             // tsbDeploymentLogs
             // 
@@ -448,5 +466,7 @@ namespace Sujan_Solution_Deployer
         private System.Windows.Forms.ToolStripButton tsbDeploymentLogs;
         private System.Windows.Forms.CheckBox chkDeployAsManaged;
         private System.Windows.Forms.ToolStripButton tsbHistory;
+        private System.Windows.Forms.ToolStripButton tsbRefresh;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
     }
 }

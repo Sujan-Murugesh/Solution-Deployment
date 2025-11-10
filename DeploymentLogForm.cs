@@ -8,6 +8,7 @@ namespace Sujan_Solution_Deployer
     public partial class DeploymentLogForm : Form
     {
         private bool isDeploymentInProgress = false;
+        public event EventHandler FormHidden;
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DeploymentLogForm));
         public DeploymentLogForm()
         {
@@ -148,17 +149,7 @@ namespace Sujan_Solution_Deployer
         {
             e.Cancel = true;
             this.Hide();
-            // Don't allow closing during deployment, just hide
-            //if (isDeploymentInProgress)
-            //{
-            //    e.Cancel = true;
-            //    this.Hide();
-            //}
-            //else
-            //{
-            //    // Allow closing when deployment is not in progress
-            //    e.Cancel = false;
-            //}
+            FormHidden?.Invoke(this, EventArgs.Empty);
         }
     }
 }
