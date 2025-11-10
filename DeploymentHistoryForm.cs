@@ -54,18 +54,46 @@ namespace Sujan_Solution_Deployer
                         row.Cells[7].Style.BackColor = Color.LightCoral;
                     }
 
-                    row.Tag = item; // Store full object for details
+                    row.Tag = item;
                     dgvHistory.Rows.Add(row);
                 }
 
                 lblTotalDeployments.Text = $"Total Deployments: {history.Count}";
                 lblSuccessful.Text = $"Successful: {history.Count(h => h.Status == Models.DeploymentStatus.Completed)}";
                 lblFailed.Text = $"Failed: {history.Count(h => h.Status == Models.DeploymentStatus.Failed)}";
+
+                // ✅ Enable/disable buttons based on history count
+                bool hasHistory = history.Count > 0;
+                btnExport.Enabled = hasHistory;
+                btnClearHistory.Enabled = hasHistory;
+
+                // ✅ Show message if no history
+                if (!hasHistory)
+                {
+                    var emptyRow = new DataGridViewRow();
+                    emptyRow.CreateCells(dgvHistory);
+                    emptyRow.Cells[0].Value = "";
+                    emptyRow.Cells[1].Value = "No deployment history found";
+                    emptyRow.Cells[2].Value = "";
+                    emptyRow.Cells[3].Value = "";
+                    emptyRow.Cells[4].Value = "";
+                    emptyRow.Cells[5].Value = "";
+                    emptyRow.Cells[6].Value = "";
+                    emptyRow.Cells[7].Value = "";
+                    emptyRow.Cells[8].Value = "";
+                    dgvHistory.Rows.Add(emptyRow);
+                    dgvHistory.Rows[0].DefaultCellStyle.Font = new Font(dgvHistory.Font, FontStyle.Italic);
+                    dgvHistory.Rows[0].DefaultCellStyle.ForeColor = Color.Gray;
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading history: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                // ✅ Disable buttons on error
+                btnExport.Enabled = false;
+                btnClearHistory.Enabled = false;
             }
         }
 
@@ -76,6 +104,14 @@ namespace Sujan_Solution_Deployer
 
         private void btnClearHistory_Click(object sender, EventArgs e)
         {
+            // ✅ Check if there's any history
+            if (dgvHistory.Rows.Count == 0 || !btnClearHistory.Enabled)
+            {
+                MessageBox.Show("No deployment history to clear.",
+                    "No History", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             var result = MessageBox.Show(
                 "Are you sure you want to clear all deployment history?\n\n" +
                 "This action cannot be undone!",
@@ -102,6 +138,14 @@ namespace Sujan_Solution_Deployer
 
         private void btnExport_Click(object sender, EventArgs e)
         {
+            // ✅ Check if there's any history
+            if (dgvHistory.Rows.Count == 0 || !btnExport.Enabled)
+            {
+                MessageBox.Show("No deployment history to export.",
+                    "No History", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             try
             {
                 using (var saveDialog = new SaveFileDialog())
