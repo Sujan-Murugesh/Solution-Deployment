@@ -184,6 +184,7 @@
             this.btnExport.TabIndex = 3;
             this.btnExport.Text = "📊 Export CSV";
             this.btnExport.UseVisualStyleBackColor = false;
+            this.btnExport.Enabled = false;
             this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // btnClearHistory
@@ -199,6 +200,7 @@
             this.btnClearHistory.TabIndex = 2;
             this.btnClearHistory.Text = "🗑️ Clear All";
             this.btnClearHistory.UseVisualStyleBackColor = false;
+            this.btnClearHistory.Enabled = false;
             this.btnClearHistory.Click += new System.EventHandler(this.btnClearHistory_Click);
             // 
             // btnRefresh
