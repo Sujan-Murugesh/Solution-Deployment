@@ -32,8 +32,10 @@ namespace Sujan_Solution_Deployer
             this.grpBackup = new System.Windows.Forms.GroupBox();
             this.btnBrowseBackup = new System.Windows.Forms.Button();
             this.txtBackupPath = new System.Windows.Forms.TextBox();
+            this.txtNotificationEmail = new System.Windows.Forms.TextBox();
             this.chkEnableBackup = new System.Windows.Forms.CheckBox();
             this.chkDeployAsManaged = new System.Windows.Forms.CheckBox();
+            this.chkEmailNotification = new System.Windows.Forms.CheckBox();
             this.grpDeploymentOptions = new System.Windows.Forms.GroupBox();
             this.chkOverwriteCustomizations = new System.Windows.Forms.CheckBox();
             this.chkPublishWorkflows = new System.Windows.Forms.CheckBox();
@@ -44,12 +46,19 @@ namespace Sujan_Solution_Deployer
             this.lblProgress = new System.Windows.Forms.Label();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
+            this.tsbRollbackSolution = new System.Windows.Forms.ToolStripButton();
             this.tsbHistory = new System.Windows.Forms.ToolStripButton();
+            this.tsbSmtpConfig = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator0 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.tsbDeploymentLogs = new System.Windows.Forms.ToolStripButton();
             this.tsbRefresh = new System.Windows.Forms.ToolStripButton();
+            this.tsbAbout = new System.Windows.Forms.ToolStripButton();
+            this.tsbHelp = new System.Windows.Forms.ToolStripButton();
+            this.tsbFeedback = new System.Windows.Forms.ToolStripButton();
             this.grpSourceEnvironment.SuspendLayout();
             this.grpTargetEnvironment.SuspendLayout();
             this.grpBackup.SuspendLayout();
@@ -248,6 +257,8 @@ namespace Sujan_Solution_Deployer
             this.grpDeploymentOptions.Controls.Add(this.chkDeployAsManaged);
             this.grpDeploymentOptions.Controls.Add(this.rbUpgrade);
             this.grpDeploymentOptions.Controls.Add(this.rbUpdate);
+            this.grpDeploymentOptions.Controls.Add(this.chkEmailNotification);
+            this.grpDeploymentOptions.Controls.Add(this.txtNotificationEmail);
             this.grpDeploymentOptions.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.grpDeploymentOptions.Location = new System.Drawing.Point(15, 350);
             this.grpDeploymentOptions.Name = "grpDeploymentOptions";
@@ -304,6 +315,29 @@ namespace Sujan_Solution_Deployer
             this.rbUpdate.Text = "🔄 Update (Upgrade existing or install if new)";
             this.rbUpdate.UseVisualStyleBackColor = true;
             // 
+            // chkEmailNotification
+            // 
+            this.chkEmailNotification.AutoSize = true;
+            this.chkEmailNotification.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.chkEmailNotification.Location = new System.Drawing.Point(650, 55);
+            this.chkEmailNotification.Name = "chkEmailNotification";
+            this.chkEmailNotification.Size = new System.Drawing.Size(130, 19);
+            this.chkEmailNotification.TabIndex = 5;
+            this.chkEmailNotification.Text = "📧 Email Notification";
+            this.chkEmailNotification.UseVisualStyleBackColor = true;
+            this.chkEmailNotification.CheckedChanged += new System.EventHandler(this.chkEmailNotification_CheckedChanged);
+
+            // 
+            // txtNotificationEmail
+            // 
+            this.txtNotificationEmail.Enabled = false;
+            this.txtNotificationEmail.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.txtNotificationEmail.Location = new System.Drawing.Point(790, 54);
+            this.txtNotificationEmail.Name = "txtNotificationEmail";
+            this.txtNotificationEmail.Text = "your.email@example.com";
+            this.txtNotificationEmail.Size = new System.Drawing.Size(180, 22);
+            this.txtNotificationEmail.TabIndex = 6;
+            // 
             // btnDeploy
             // 
             this.btnDeploy.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -343,12 +377,19 @@ namespace Sujan_Solution_Deployer
             // 
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tsbClose,
+            this.toolStripSeparator0,
+            this.tsbRollbackSolution,
             this.toolStripSeparator1,
             this.tsbDeploymentLogs,
             this.toolStripSeparator2,
             this.tsbHistory,
             this.toolStripSeparator3,
-            this.tsbRefresh
+            this.tsbRefresh,
+            this.toolStripSeparator4,
+            this.tsbSmtpConfig,
+            this.tsbFeedback,
+            this.tsbHelp,
+            this.tsbAbout
             });
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
@@ -363,6 +404,15 @@ namespace Sujan_Solution_Deployer
             this.tsbClose.Size = new System.Drawing.Size(56, 22);
             this.tsbClose.Text = "Close";
             this.tsbClose.Click += new System.EventHandler(this.tsbClose_Click);
+            //
+            // tsbRollbackSolution
+            // 
+            this.tsbRollbackSolution.Image = null;
+            this.tsbRollbackSolution.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbRollbackSolution.Name = "tsbRollbackSolution";
+            this.tsbRollbackSolution.Size = new System.Drawing.Size(85, 22);
+            this.tsbRollbackSolution.Text = "📜 Rollback Solution";
+            this.tsbRollbackSolution.Click += new System.EventHandler(this.tsbRollbackSolution_Click);
             //
             // tsbHistory
             // 
@@ -382,6 +432,53 @@ namespace Sujan_Solution_Deployer
             this.tsbRefresh.Text = "🔄 Refresh";
             this.tsbRefresh.Click += new System.EventHandler(this.tsbRefresh_Click);
             // 
+            // tsbAbout
+            // 
+            this.tsbAbout.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbAbout.Image = null;
+            this.tsbAbout.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbAbout.Name = "tsbAbout";
+            this.tsbAbout.Size = new System.Drawing.Size(65, 22);
+            this.tsbAbout.Text = "ℹ️ About";
+            this.tsbAbout.Click += new System.EventHandler(this.tsbAbout_Click);
+
+            // 
+            // tsbHelp
+            // 
+            this.tsbHelp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbHelp.Image = null;
+            this.tsbHelp.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbHelp.Name = "tsbHelp";
+            this.tsbHelp.Size = new System.Drawing.Size(60, 22);
+            this.tsbHelp.Text = "❓ Help";
+            this.tsbHelp.Click += new System.EventHandler(this.tsbHelp_Click);
+
+            // 
+            // tsbFeedback
+            // 
+            this.tsbFeedback.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbFeedback.Image = null;
+            this.tsbFeedback.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbFeedback.Name = "tsbFeedback";
+            this.tsbFeedback.Size = new System.Drawing.Size(80, 22);
+            this.tsbFeedback.Text = "💬 Feedback";
+            this.tsbFeedback.Click += new System.EventHandler(this.tsbFeedback_Click);
+            // 
+            // tsbSmtpConfig
+            // 
+            this.tsbSmtpConfig.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbSmtpConfig.Image = null;
+            this.tsbSmtpConfig.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbSmtpConfig.Name = "tsbSmtpConfig";
+            this.tsbSmtpConfig.Size = new System.Drawing.Size(95, 22);
+            this.tsbSmtpConfig.Text = "📧 SMTP Setup";
+            this.tsbSmtpConfig.Click += new System.EventHandler(this.tsbSmtpConfig_Click);
+            // 
+            // toolStripSeparator0
+            // 
+            this.toolStripSeparator0.Name = "toolStripSeparator0";
+            this.toolStripSeparator0.Size = new System.Drawing.Size(6, 25);
+            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
@@ -396,6 +493,12 @@ namespace Sujan_Solution_Deployer
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
             this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+            this.toolStripSeparator4.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             // 
             // tsbDeploymentLogs
             // 
@@ -434,7 +537,6 @@ namespace Sujan_Solution_Deployer
             this.ResumeLayout(false);
             this.PerformLayout();
         }
-
         #endregion
 
         private System.Windows.Forms.GroupBox grpSourceEnvironment;
@@ -461,6 +563,8 @@ namespace Sujan_Solution_Deployer
         private System.Windows.Forms.Label lblProgress;
         private System.Windows.Forms.ToolStrip toolStrip;
         private System.Windows.Forms.ToolStripButton tsbClose;
+        private System.Windows.Forms.ToolStripButton tsbRollbackSolution;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator0;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton tsbDeploymentLogs;
@@ -468,5 +572,12 @@ namespace Sujan_Solution_Deployer
         private System.Windows.Forms.ToolStripButton tsbHistory;
         private System.Windows.Forms.ToolStripButton tsbRefresh;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripButton tsbHelp;
+        private System.Windows.Forms.ToolStripButton tsbAbout;
+        private System.Windows.Forms.ToolStripButton tsbFeedback;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.CheckBox chkEmailNotification;
+        private System.Windows.Forms.TextBox txtNotificationEmail;
+        private System.Windows.Forms.ToolStripButton tsbSmtpConfig;
     }
 }

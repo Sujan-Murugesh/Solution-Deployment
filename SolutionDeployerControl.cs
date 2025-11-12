@@ -15,6 +15,7 @@ using System.Threading;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
 using ConnectionManager = Sujan_Solution_Deployer.Services.ConnectionManager;
+using Label = System.Windows.Forms.Label;
 using SolutionInfo = Sujan_Solution_Deployer.Models.SolutionInfo;
 
 namespace Sujan_Solution_Deployer
@@ -28,10 +29,13 @@ namespace Sujan_Solution_Deployer
         private List<SolutionInfo> managedSolutions = new List<SolutionInfo>();
         private DeploymentLogForm logForm = null;
         private DeploymentHistoryService deploymentHistoryService;
+        private EmailNotificationService emailNotificationService;
         public SolutionDeployerControl()
         {
             InitializeComponent();
             deploymentHistoryService = new DeploymentHistoryService();
+            emailNotificationService = new EmailNotificationService();
+            SetPlaceholder(txtNotificationEmail, "your.email@example.com");
         }
 
         #region ==>Methods
@@ -40,6 +44,50 @@ namespace Sujan_Solution_Deployer
             ShowInfoNotification("Welcome to Sujan Solution Deployer! Connect to your DEV environment to begin.", null);
             InitializeDefaultSettings();
             InitializeLogForm();
+            LoadSmtpSettings();
+        }
+
+        /// Load saved SMTP settings and configure email service
+        private void LoadSmtpSettings()
+        {
+            try
+            {
+                if (SmtpSettingsManager.SettingsExist())
+                {
+                    var settings = SmtpSettingsManager.LoadSettings();
+
+                    // Only configure if we have valid email and password
+                    if (!string.IsNullOrWhiteSpace(settings.SenderEmail) &&
+                        !string.IsNullOrWhiteSpace(settings.Password))
+                    {
+                        EmailNotificationService.ConfigureSmtp(
+                            settings.SmtpHost,
+                            settings.SmtpPort,
+                            settings.EnableSsl,
+                            settings.SenderEmail,
+                            settings.Password,
+                            settings.SenderName
+                        );
+
+                        LogInfo($"✅ SMTP settings loaded - Email notifications are enabled");
+                        LogInfo($"   📧 Sender: {settings.SenderEmail}");
+                        LogInfo($"   🖥️ Server: {settings.SmtpHost}:{settings.SmtpPort}");
+                    }
+                    else
+                    {
+                        LogWarning("⚠️ SMTP settings found but incomplete - Configure via 📧 SMTP Setup");
+                    }
+                }
+                else
+                {
+                    LogInfo("ℹ️ No SMTP settings found - Configure email notifications via 📧 SMTP Setup");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWarning($"⚠️ Could not load SMTP settings: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SMTP load error: {ex.Message}");
+            }
         }
 
         private void InitializeLogForm()
@@ -283,7 +331,18 @@ namespace Sujan_Solution_Deployer
                 return;
             }
 
-            // Step 2: Show Version Increment Dialog
+            // Step 2: Validate email if notification is enabled
+            string notificationEmail = null;
+            if (chkEmailNotification.Checked)
+            {
+                notificationEmail = GetValidatedEmailAddress();
+                if (notificationEmail == null)
+                {
+                    return;
+                }
+            }
+
+            // Step 3: Show Version Increment Dialog
             var versionForm = new VersionIncrementForm(selectedSolutions, solutionService);
             if (versionForm.ShowDialog(this) != DialogResult.OK)
             {
@@ -293,7 +352,7 @@ namespace Sujan_Solution_Deployer
             var updatedVersions = versionForm.UpdatedVersions;
             var updateInSource = versionForm.UpdateInSource;
 
-            // Step 3: Open log window automatically
+            // Step 4: Open log window automatically
             if (logForm == null || logForm.IsDisposed)
             {
                 InitializeLogForm();
@@ -305,14 +364,15 @@ namespace Sujan_Solution_Deployer
                 tsbDeploymentLogs.Text = "❌ Close Logs";
             }
 
-            // Step 4: Build confirmation message with version information
+            // Step 5: Build confirmation message with version information
             var confirmMessage = BuildConfirmationMessage(selectedSolutions, selectedTargets, updatedVersions, updateInSource);
 
-            // Step 5: Confirm and start deployment
+            // Step 6: Confirm and start deployment
             if (MessageBox.Show(confirmMessage, "Confirm Deployment",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                StartDeployment(selectedSolutions, selectedTargets, updatedVersions, updateInSource);
+                StartDeployment(selectedSolutions, selectedTargets, updatedVersions, updateInSource, notificationEmail);
+                //StartDeployment(selectedSolutions, selectedTargets, updatedVersions, updateInSource);
             }
         }
 
@@ -412,7 +472,8 @@ namespace Sujan_Solution_Deployer
             List<SolutionInfo> solutions,
             List<DeploymentTarget> targets,
             Dictionary<string, string> updatedVersions,
-            bool updateInSource)
+            bool updateInSource,
+            string notificationEmail)
         {
             // Mark deployment as in progress
             if (logForm != null && !logForm.IsDisposed)
@@ -441,6 +502,10 @@ namespace Sujan_Solution_Deployer
             LogInfo($"💾 Backup: {(chkEnableBackup.Checked ? "Enabled" : "Disabled")}");
             LogInfo($"🔒 Deploy as Managed: {(chkDeployAsManaged.Checked ? "Yes" : "No")}");
             LogInfo($"🔢 Update Source Versions: {(updateInSource ? "Yes" : "No")}");
+            if (!string.IsNullOrWhiteSpace(notificationEmail))
+            {
+                LogInfo($"📧 Email Notification: {notificationEmail}");
+            }
             LogInfo("==========================================\n");
 
             WorkAsync(new WorkAsyncInfo
@@ -451,6 +516,11 @@ namespace Sujan_Solution_Deployer
                     var totalOperations = solutions.Count * (targets.Count + 1);
                     var completedOperations = 0;
                     var deploymentStartTime = DateTime.Now;
+
+                    // ✅ Track deployment results for email summary
+                    var deploymentResults = new List<DeploymentHistory>();
+                    int successCount = 0;
+                    int failureCount = 0;
 
                     foreach (var solution in solutions)
                     {
@@ -568,9 +638,18 @@ namespace Sujan_Solution_Deployer
                             // Step 3: Deploy to each target
                             foreach (var target in targets)
                             {
-                                DeployToTarget(worker, solution, target, solutionFile, deploymentVersion,
+                                // ✅ Collect deployment result
+                                var result = DeployToTarget(worker, solution, target, solutionFile, deploymentVersion,
                                              exportAsManaged, deployingAsManaged, backupPath,
                                              ref completedOperations, totalOperations);
+
+                                deploymentResults.Add(result);
+
+                                // ✅ Track success/failure
+                                if (result.Status == DeploymentStatus.Completed)
+                                    successCount++;
+                                else
+                                    failureCount++;
                             }
                         }
                         catch (Exception ex)
@@ -579,8 +658,12 @@ namespace Sujan_Solution_Deployer
                             completedOperations += targets.Count;
 
                             // Save failed history
-                            SaveFailedDeploymentHistory(solution, targets, deploymentVersion,
+                            var failedHistories = SaveFailedDeploymentHistory(solution, targets, deploymentVersion,
                                                        ex.Message, solutionStartTime);
+
+                            // ✅ Add failed results
+                            deploymentResults.AddRange(failedHistories);
+                            failureCount += targets.Count;
                         }
                     }
 
@@ -592,6 +675,16 @@ namespace Sujan_Solution_Deployer
                     worker.ReportProgress(100, "✅ DEPLOYMENT COMPLETED");
                     worker.ReportProgress(100, $"⏱️ Total Duration: {totalDuration.Hours}h {totalDuration.Minutes}m {totalDuration.Seconds}s");
                     worker.ReportProgress(100, "==========================================");
+
+                    // ✅ Pass results for email notification
+                    args.Result = new
+                    {
+                        Results = deploymentResults,
+                        SuccessCount = successCount,
+                        FailureCount = failureCount,
+                        StartTime = deploymentStartTime,
+                        EndTime = deploymentEndTime
+                    };
                 },
                 ProgressChanged = (args) =>
                 {
@@ -630,6 +723,31 @@ namespace Sujan_Solution_Deployer
                     }
                     else
                     {
+                        // ✅ Send email notification if configured
+                        if (!string.IsNullOrWhiteSpace(notificationEmail) && args.Result != null)
+                        {
+                            try
+                            {
+                                var result = (dynamic)args.Result;
+
+                                LogInfo($"\n📧 Sending email notification to {notificationEmail}...");
+
+                                EmailNotificationService.SendBatchDeploymentSummary(
+                                    notificationEmail,
+                                    result.Results.Count,
+                                    result.SuccessCount,
+                                    result.FailureCount,
+                                    result.StartTime,
+                                    result.EndTime);
+
+                                LogInfo("✅ Email notification sent successfully");
+                            }
+                            catch (Exception emailEx)
+                            {
+                                LogWarning($"⚠️ Could not send email notification: {emailEx.Message}");
+                            }
+                        }
+
                         LogInfo("\n🎉 All deployment operations completed!");
                         LogInfo($"📝 Review the detailed log above.");
                         LogInfo($"📊 View deployment history for detailed results.");
@@ -643,7 +761,7 @@ namespace Sujan_Solution_Deployer
             });
         }
 
-        private void DeployToTarget(
+        private DeploymentHistory DeployToTarget(
             BackgroundWorker worker,
             SolutionInfo solution,
             DeploymentTarget target,
@@ -716,11 +834,13 @@ namespace Sujan_Solution_Deployer
                 targetVersion = deploymentVersion;
             }
 
-            // Save history
-            SaveDeploymentHistory(solution, target, deploymentVersion, targetVersion, status,
+            // Save and return history
+            var history = SaveDeploymentHistory(solution, target, deploymentVersion, targetVersion, status,
                                  errorMessage, targetDeploymentStart, backupPath, exportAsManaged, deployingAsManaged);
 
             completedOperations++;
+
+            return history;  // ✅ Return the deployment history
         }
 
         private IOrganizationService GetTargetService(
@@ -820,7 +940,7 @@ namespace Sujan_Solution_Deployer
             return importCompleted;
         }
 
-        private void SaveDeploymentHistory(
+        private DeploymentHistory SaveDeploymentHistory(
             SolutionInfo solution,
             DeploymentTarget target,
             string sourceVersion,
@@ -862,9 +982,12 @@ namespace Sujan_Solution_Deployer
             {
                 System.Diagnostics.Debug.WriteLine($"Could not save history: {ex.Message}");
             }
+
+            return history;  // ✅ Return the history object
         }
 
-        private void SaveFailedDeploymentHistory(
+
+        private List<DeploymentHistory> SaveFailedDeploymentHistory(
             SolutionInfo solution,
             List<DeploymentTarget> targets,
             string version,
@@ -873,6 +996,7 @@ namespace Sujan_Solution_Deployer
         {
             var endTime = DateTime.Now;
             var duration = (int)(endTime - startTime).TotalSeconds;
+            var histories = new List<DeploymentHistory>();
 
             foreach (var target in targets)
             {
@@ -898,8 +1022,130 @@ namespace Sujan_Solution_Deployer
                 try
                 {
                     deploymentHistoryService.AddDeployment(history);
+                    histories.Add(history);
                 }
-                catch { }
+                catch
+                {
+                    histories.Add(history); // Add even if save fails
+                }
+            }
+
+            return histories;  // ✅ Return the list of histories
+        }
+        #endregion
+
+        #region==>Email Notification
+        private string GetValidatedEmailAddress()
+        {
+            if (!chkEmailNotification.Checked)
+            {
+                return null;
+            }
+
+            string email = txtNotificationEmail.Text?.Trim();
+
+            // Check if email is empty or placeholder
+            if (string.IsNullOrWhiteSpace(email) ||
+                email == "your.email@example.com" ||
+                txtNotificationEmail.ForeColor == Color.Gray)
+            {
+                // Prompt for email
+                var inputForm = new Form
+                {
+                    Text = "Email Notification",
+                    Size = new Size(450, 180),
+                    StartPosition = FormStartPosition.CenterParent,
+                    FormBorderStyle = FormBorderStyle.FixedDialog,
+                    MinimizeBox = false,
+                    MaximizeBox = false
+                };
+
+                var lblPrompt = new Label
+                {
+                    Text = "📧 Please enter your email address for deployment notifications:",
+                    Location = new Point(20, 20),
+                    Size = new Size(400, 40),
+                    Font = new Font("Segoe UI", 9F)
+                };
+
+                var txtEmail = new TextBox
+                {
+                    Location = new Point(20, 65),
+                    Size = new Size(400, 25),
+                    Font = new Font("Segoe UI", 9F)
+                };
+
+                var btnOk = new Button
+                {
+                    Text = "✅ OK",
+                    Location = new Point(245, 100),
+                    Size = new Size(85, 30),
+                    DialogResult = DialogResult.OK,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+                };
+
+                var btnCancel = new Button
+                {
+                    Text = "❌ Cancel",
+                    Location = new Point(335, 100),
+                    Size = new Size(85, 30),
+                    DialogResult = DialogResult.Cancel,
+                    Font = new Font("Segoe UI", 9F)
+                };
+
+                inputForm.Controls.AddRange(new Control[] { lblPrompt, txtEmail, btnOk, btnCancel });
+                inputForm.AcceptButton = btnOk;
+                inputForm.CancelButton = btnCancel;
+
+                if (inputForm.ShowDialog(this) == DialogResult.OK)
+                {
+                    email = txtEmail.Text?.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(email) && IsValidEmail(email))
+                    {
+                        // Save the email back to the textbox
+                        txtNotificationEmail.Text = email;
+                        txtNotificationEmail.ForeColor = Color.Black;
+                        return email;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please enter a valid email address.",
+                            "Invalid Email", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return null;
+                    }
+                }
+
+                return null;
+            }
+
+            // Validate existing email
+            if (IsValidEmail(email))
+            {
+                return email;
+            }
+            else
+            {
+                MessageBox.Show("The email address in the notification field is invalid. Please correct it.",
+                    "Invalid Email", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtNotificationEmail.Focus();
+                return null;
+            }
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
             }
         }
         #endregion
@@ -1137,6 +1383,249 @@ namespace Sujan_Solution_Deployer
         }
         #endregion
 
+        #region ==>Advanced Features
+        private void tsbAbout_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var aboutForm = new AboutForm();
+                aboutForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening About dialog: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tsbFeedback_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var feedbackForm = new FeedbackForm();
+                feedbackForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening Feedback form: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tsbHelp_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ShowHelp();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening help: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ShowHelp()
+        {
+            var helpText = @"
+╔══════════════════════════════════════════════════════════╗
+║     SUJAN SOLUTION DEPLOYER - QUICK START GUIDE         ║
+╚══════════════════════════════════════════════════════════╝
+
+📋 OVERVIEW
+This tool automates solution deployment across Dynamics 365 / 
+Power Platform environments with version management, automated 
+backups, and deployment history tracking.
+
+🚀 GETTING STARTED
+
+1️⃣ LOAD SOLUTIONS
+   • Connect to your DEV environment
+   • Click '🔄 Load Solutions'
+   • Select solutions to deploy
+
+2️⃣ ADD TARGET ENVIRONMENTS
+   • Click '➕ Add Environment'
+   • Select UAT/PROD environments
+   • Multiple targets supported
+
+3️⃣ CONFIGURE OPTIONS
+   • Set backup location
+   • Choose deployment type (Update/Upgrade)
+   • Enable/disable workflow publishing
+   • Select 'Deploy as Managed' if needed
+
+4️⃣ VERSION MANAGEMENT
+   • Set version increments (Major/Minor/Build/Revision)
+   • Manual version entry supported
+   • Auto-update source versions
+
+5️⃣ DEPLOY
+   • Click '🚀 START DEPLOYMENT'
+   • Monitor progress in log window
+   • View detailed results
+
+📊 FEATURES
+
+✅ Auto Backup - Solutions backed up before deployment
+✅ Version Control - Increment versions automatically
+✅ Multi-Target - Deploy to multiple environments
+✅ History Tracking - Full deployment audit trail
+✅ Managed Conversion - Convert unmanaged to managed
+✅ Progress Monitoring - Real-time deployment status
+
+🔧 DEPLOYMENT OPTIONS
+
+- Update: Upgrades existing or installs if new
+- Upgrade: Forces new version, stages for upgrade
+- Publish Workflows: Auto-publish after import
+- Overwrite Customizations: Replaces unmanaged changes
+- Deploy as Managed: Converts unmanaged to managed
+
+📜 DEPLOYMENT HISTORY
+
+- View all past deployments
+- Filter by environment or solution
+- Export to CSV for reporting
+- Track success/failure rates
+
+💡 TIPS
+
+- Always backup before deployment
+- Test in UAT before PROD
+- Review version changes carefully
+- Monitor import progress
+- Check deployment history for issues
+
+⚠️ IMPORTANT NOTES
+
+- Managed solutions cannot be uninstalled easily
+- Version downgrades may cause issues
+- Always test in non-production first
+- Keep backups of critical solutions
+- Review overwrite options carefully
+
+📞 SUPPORT
+
+- Feedback: Use '💬 Feedback' button
+- Issues: Report via GitHub
+- Updates: Check for latest version
+
+═══════════════════════════════════════════════════════════
+
+For detailed documentation, visit the GitHub repository.
+";
+
+            var helpForm = new Form
+            {
+                Text = "Help - Sujan Solution Deployer",
+                Size = new Size(700, 600),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.Sizable,
+                MinimizeBox = false,
+                MaximizeBox = true
+            };
+
+            var txtHelp = new RichTextBox
+            {
+                Dock = DockStyle.Fill,
+                ReadOnly = true,
+                Font = new Font("Consolas", 9F),
+                BackColor = Color.White,
+                Text = helpText,
+                WordWrap = true
+            };
+
+            var btnClose = new Button
+            {
+                Text = "❌ Close",
+                Dock = DockStyle.Bottom,
+                Height = 40,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(100, 100, 100),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnClose.Click += (s, args) => helpForm.Close();
+
+            helpForm.Controls.Add(txtHelp);
+            helpForm.Controls.Add(btnClose);
+            helpForm.ShowDialog(this);
+        }
+
+        private void chkEmailNotification_CheckedChanged(object sender, EventArgs e)
+        {
+            txtNotificationEmail.Enabled = chkEmailNotification.Checked;
+            if (chkEmailNotification.Checked)
+            {
+                txtNotificationEmail.Focus();
+            }
+        }
+
+        void SetPlaceholder(TextBox textBox, string placeholder)
+        {
+            textBox.ForeColor = Color.Gray;
+            textBox.Text = placeholder;
+
+            textBox.GotFocus += (sender, e) =>
+            {
+                if (textBox.Text == placeholder)
+                {
+                    textBox.Text = "";
+                    textBox.ForeColor = Color.Black;
+                }
+            };
+
+            textBox.LostFocus += (sender, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(textBox.Text))
+                {
+                    textBox.ForeColor = Color.Gray;
+                    textBox.Text = placeholder;
+                }
+            };
+        }
+
+        private void tsbSmtpConfig_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var smtpForm = new SmtpConfigurationForm();
+                var result = smtpForm.ShowDialog(this);
+
+                if (result == DialogResult.OK)
+                {
+                    LoadSmtpSettings();
+
+                    ShowInfoNotification("SMTP settings configured successfully! Email notifications are now enabled.", null);
+                    LogInfo("✅ SMTP configuration updated successfully");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening SMTP configuration:\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogError($"Failed to open SMTP configuration: {ex.Message}");
+            }
+        }
+
+        private void tsbRollbackSolution_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var rollbackSolutionForm = new RollbackForm();
+                rollbackSolutionForm.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening Rollback Solution:\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
+
+        #region ==>System methods
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
             ShowInfoNotification("This is a notification that can lead to XrmToolBox repository", new Uri("https://github.com/MscrmTools/XrmToolBox"));
@@ -1200,5 +1689,6 @@ namespace Sujan_Solution_Deployer
                 LogInfo("Connection has changed to: {0}", detail.WebApplicationUrl);
             }
         }
+        #endregion
     }
 }
