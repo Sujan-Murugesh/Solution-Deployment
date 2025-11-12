@@ -79,7 +79,6 @@ namespace Sujan_Solution_Deployer
 
             cmbIncrementType.SelectedIndex = 0; // Select "None"
         }
-        // Test in btnApplyToAll_Click to debug
         private void btnApplyToAll_Click(object sender, EventArgs e)
         {
             if (cmbIncrementType.SelectedIndex <= 0)
@@ -91,10 +90,6 @@ namespace Sujan_Solution_Deployer
 
             var selectedText = cmbIncrementType.SelectedItem.ToString();
             var incrementType = GetIncrementTypeFromIndex(cmbIncrementType.SelectedIndex);
-
-            // Debug: Show what was selected
-            MessageBox.Show($"Selected: {selectedText}\nIndex: {cmbIncrementType.SelectedIndex}\nType: {incrementType}",
-                "Debug Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             foreach (DataGridViewRow row in dgvSolutions.Rows)
             {
@@ -110,7 +105,7 @@ namespace Sujan_Solution_Deployer
                     System.Diagnostics.Debug.WriteLine($"Old: {oldVersion}, New: {newVersion}, Type: {incrementType}");
 
                     row.Cells[2].Value = newVersion;
-                    row.Cells[3].Value = selectedText; // Use exact selected text
+                    row.Cells[3].Value = selectedText;
                     row.Cells[2].Style.BackColor = Color.LightYellow;
                 }
             }
