@@ -261,6 +261,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AboutForm.cs" />
+    <Compile Include="AboutForm.Designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DeploymentHistoryForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -273,6 +277,10 @@
     <Compile Include="DeploymentLogForm.Designer.cs">
       <DependentUpon>DeploymentLogForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FeedbackForm.cs" />
+    <Compile Include="FeedbackForm.Designer.cs">
+      <DependentUpon>FeedbackForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\DeploymentHistory.cs" />
     <Compile Include="Models\DeploymentProgress.cs" />
     <Compile Include="Models\DeploymentTarget.cs" />
@@ -283,9 +291,23 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RollbackForm.cs" />
+    <Compile Include="RollbackForm.Designer.cs">
+      <DependentUpon>RollbackForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Services\ConnectionManager.cs" />
     <Compile Include="Services\DeploymentHistoryService.cs" />
+    <Compile Include="Services\EmailNotificationService.cs" />
+    <Compile Include="Services\SmtpSettingsManager.cs" />
     <Compile Include="Services\SolutionService.cs" />
+    <Compile Include="SmtpConfigurationForm.cs" />
+    <Compile Include="SmtpConfigurationForm.Designer.cs">
+      <DependentUpon>SmtpConfigurationForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SmtpDiagnosticForm.cs" />
+    <Compile Include="SmtpDiagnosticForm.Designer.cs">
+      <DependentUpon>SmtpDiagnosticForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="SolutionDeployerControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -303,19 +325,38 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Content Include="Assert\App-Passwordkey-Generation-Guide.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assert\deployer-logo.gif" />
     <Content Include="Assert\logo-32.png" />
     <Content Include="Assert\logo-80.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="AboutForm.resx">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DeploymentLogForm.resx">
       <DependentUpon>DeploymentLogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FeedbackForm.resx">
+      <DependentUpon>FeedbackForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RollbackForm.resx">
+      <DependentUpon>RollbackForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SmtpConfigurationForm.resx">
+      <DependentUpon>SmtpConfigurationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SmtpDiagnosticForm.resx">
+      <DependentUpon>SmtpDiagnosticForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SolutionDeployerControl.resx">
       <DependentUpon>SolutionDeployerControl.cs</DependentUpon>
