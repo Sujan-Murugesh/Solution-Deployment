@@ -261,13 +261,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
-    <Compile Include="AboutForm.cs" />
-=======
     <Compile Include="AboutForm.cs">
       <SubType>Form</SubType>
     </Compile>
->>>>>>> 3d9820516e838427ff2860fe4ee973ee84c2493d
     <Compile Include="AboutForm.Designer.cs">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
@@ -283,13 +279,9 @@
     <Compile Include="DeploymentLogForm.Designer.cs">
       <DependentUpon>DeploymentLogForm.cs</DependentUpon>
     </Compile>
-<<<<<<< HEAD
-    <Compile Include="FeedbackForm.cs" />
-=======
     <Compile Include="FeedbackForm.cs">
       <SubType>Form</SubType>
     </Compile>
->>>>>>> 3d9820516e838427ff2860fe4ee973ee84c2493d
     <Compile Include="FeedbackForm.Designer.cs">
       <DependentUpon>FeedbackForm.cs</DependentUpon>
     </Compile>
@@ -303,13 +295,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-<<<<<<< HEAD
-    <Compile Include="RollbackForm.cs" />
-=======
     <Compile Include="RollbackForm.cs">
       <SubType>Form</SubType>
     </Compile>
->>>>>>> 3d9820516e838427ff2860fe4ee973ee84c2493d
     <Compile Include="RollbackForm.Designer.cs">
       <DependentUpon>RollbackForm.cs</DependentUpon>
     </Compile>
@@ -318,13 +306,11 @@
     <Compile Include="Services\EmailNotificationService.cs" />
     <Compile Include="Services\SmtpSettingsManager.cs" />
     <Compile Include="Services\SolutionService.cs" />
-<<<<<<< HEAD
     <Compile Include="SmtpConfigurationForm.cs" />
     <Compile Include="SmtpConfigurationForm.Designer.cs">
       <DependentUpon>SmtpConfigurationForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SmtpDiagnosticForm.cs" />
-=======
     <Compile Include="SmtpConfigurationForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -334,7 +320,6 @@
     <Compile Include="SmtpDiagnosticForm.cs">
       <SubType>Form</SubType>
     </Compile>
->>>>>>> 3d9820516e838427ff2860fe4ee973ee84c2493d
     <Compile Include="SmtpDiagnosticForm.Designer.cs">
       <DependentUpon>SmtpDiagnosticForm.cs</DependentUpon>
     </Compile>
