@@ -467,7 +467,7 @@ namespace Sujan_Solution_Deployer
             return selected;
         }
 
-        #region ==>Start Deployment and Logging
+        #region ==>Start Deployment Logic
         private void StartDeployment(
             List<SolutionInfo> solutions,
             List<DeploymentTarget> targets,
@@ -1428,93 +1428,93 @@ namespace Sujan_Solution_Deployer
         private void ShowHelp()
         {
             var helpText = @"
-╔══════════════════════════════════════════════════════════╗
-║     SUJAN SOLUTION DEPLOYER - QUICK START GUIDE         ║
-╚══════════════════════════════════════════════════════════╝
+                ╔══════════════════════════════════════════════════════════╗
+                ║     SUJAN SOLUTION DEPLOYER - QUICK START GUIDE         ║
+                ╚══════════════════════════════════════════════════════════╝
 
-📋 OVERVIEW
-This tool automates solution deployment across Dynamics 365 / 
-Power Platform environments with version management, automated 
-backups, and deployment history tracking.
+                📋 OVERVIEW
+                This tool automates solution deployment across Dynamics 365 / 
+                Power Platform environments with version management, automated 
+                backups, and deployment history tracking.
 
-🚀 GETTING STARTED
+                🚀 GETTING STARTED
 
-1️⃣ LOAD SOLUTIONS
-   • Connect to your DEV environment
-   • Click '🔄 Load Solutions'
-   • Select solutions to deploy
+                1️⃣ LOAD SOLUTIONS
+                   • Connect to your DEV environment
+                   • Click '🔄 Load Solutions'
+                   • Select solutions to deploy
 
-2️⃣ ADD TARGET ENVIRONMENTS
-   • Click '➕ Add Environment'
-   • Select UAT/PROD environments
-   • Multiple targets supported
+                2️⃣ ADD TARGET ENVIRONMENTS
+                   • Click '➕ Add Environment'
+                   • Select UAT/PROD environments
+                   • Multiple targets supported
 
-3️⃣ CONFIGURE OPTIONS
-   • Set backup location
-   • Choose deployment type (Update/Upgrade)
-   • Enable/disable workflow publishing
-   • Select 'Deploy as Managed' if needed
+                3️⃣ CONFIGURE OPTIONS
+                   • Set backup location
+                   • Choose deployment type (Update/Upgrade)
+                   • Enable/disable workflow publishing
+                   • Select 'Deploy as Managed' if needed
 
-4️⃣ VERSION MANAGEMENT
-   • Set version increments (Major/Minor/Build/Revision)
-   • Manual version entry supported
-   • Auto-update source versions
+                4️⃣ VERSION MANAGEMENT
+                   • Set version increments (Major/Minor/Build/Revision)
+                   • Manual version entry supported
+                   • Auto-update source versions
 
-5️⃣ DEPLOY
-   • Click '🚀 START DEPLOYMENT'
-   • Monitor progress in log window
-   • View detailed results
+                5️⃣ DEPLOY
+                   • Click '🚀 START DEPLOYMENT'
+                   • Monitor progress in log window
+                   • View detailed results
 
-📊 FEATURES
+                📊 FEATURES
 
-✅ Auto Backup - Solutions backed up before deployment
-✅ Version Control - Increment versions automatically
-✅ Multi-Target - Deploy to multiple environments
-✅ History Tracking - Full deployment audit trail
-✅ Managed Conversion - Convert unmanaged to managed
-✅ Progress Monitoring - Real-time deployment status
+                ✅ Auto Backup - Solutions backed up before deployment
+                ✅ Version Control - Increment versions automatically
+                ✅ Multi-Target - Deploy to multiple environments
+                ✅ History Tracking - Full deployment audit trail
+                ✅ Managed Conversion - Convert unmanaged to managed
+                ✅ Progress Monitoring - Real-time deployment status
 
-🔧 DEPLOYMENT OPTIONS
+                🔧 DEPLOYMENT OPTIONS
 
-- Update: Upgrades existing or installs if new
-- Upgrade: Forces new version, stages for upgrade
-- Publish Workflows: Auto-publish after import
-- Overwrite Customizations: Replaces unmanaged changes
-- Deploy as Managed: Converts unmanaged to managed
+                - Update: Upgrades existing or installs if new
+                - Upgrade: Forces new version, stages for upgrade
+                - Publish Workflows: Auto-publish after import
+                - Overwrite Customizations: Replaces unmanaged changes
+                - Deploy as Managed: Converts unmanaged to managed
 
-📜 DEPLOYMENT HISTORY
+                📜 DEPLOYMENT HISTORY
 
-- View all past deployments
-- Filter by environment or solution
-- Export to CSV for reporting
-- Track success/failure rates
+                - View all past deployments
+                - Filter by environment or solution
+                - Export to CSV for reporting
+                - Track success/failure rates
 
-💡 TIPS
+                💡 TIPS
 
-- Always backup before deployment
-- Test in UAT before PROD
-- Review version changes carefully
-- Monitor import progress
-- Check deployment history for issues
+                - Always backup before deployment
+                - Test in UAT before PROD
+                - Review version changes carefully
+                - Monitor import progress
+                - Check deployment history for issues
 
-⚠️ IMPORTANT NOTES
+                ⚠️ IMPORTANT NOTES
 
-- Managed solutions cannot be uninstalled easily
-- Version downgrades may cause issues
-- Always test in non-production first
-- Keep backups of critical solutions
-- Review overwrite options carefully
+                - Managed solutions cannot be uninstalled easily
+                - Version downgrades may cause issues
+                - Always test in non-production first
+                - Keep backups of critical solutions
+                - Review overwrite options carefully
 
-📞 SUPPORT
+                📞 SUPPORT
 
-- Feedback: Use '💬 Feedback' button
-- Issues: Report via GitHub
-- Updates: Check for latest version
+                - Feedback: Use '💬 Feedback' button
+                - Issues: Report via GitHub
+                - Updates: Check for latest version
 
-═══════════════════════════════════════════════════════════
+                ═══════════════════════════════════════════════════════════
 
-For detailed documentation, visit the GitHub repository.
-";
+                For detailed documentation, visit the GitHub repository.
+                ";
 
             var helpForm = new Form
             {
@@ -1613,14 +1613,223 @@ For detailed documentation, visit the GitHub repository.
         {
             try
             {
-                var rollbackSolutionForm = new RollbackForm();
-                rollbackSolutionForm.ShowDialog(this);
+                // Get available connections
+                var connections = GetAvailableConnections();
+
+                // Also get their active services
+                var activeServices = GetActiveServices();
+
+                // Validate connections exist
+                if (connections == null || connections.Count == 0)
+                {
+                    MessageBox.Show(
+                        "No connections available for rollback.\n\n" +
+                        "Please:\n" +
+                        "1. Connect to your DEV environment first, OR\n" +
+                        "2. Add target environments, OR\n" +
+                        "3. Ensure XrmToolBox has saved connections",
+                        "No Connections",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+
+                    LogWarning("⚠️ Rollback cancelled - no connections available");
+                    return;
+                }
+
+                LogInfo($"🔄 Opening Rollback Manager with {connections.Count} available connection(s)...");
+
+                // Open rollback form with both connections and services
+                using (var rollbackForm = new RollbackForm(connections, activeServices))
+                {
+                    var result = rollbackForm.ShowDialog(this);
+
+                    if (result == DialogResult.OK)
+                    {
+                        LogInfo("✅ Rollback operation completed successfully!");
+
+                        MessageBox.Show(
+                            "Rollback operation completed successfully!\n\n" +
+                            "The solution has been restored to the previous version.",
+                            "Rollback Complete",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+
+                        ShowInfoNotification("Rollback completed successfully!", null);
+                    }
+                    else
+                    {
+                        LogInfo("ℹ️ Rollback operation cancelled by user");
+                    }
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error opening Rollback Solution:\n{ex.Message}",
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogError($"❌ Error opening rollback manager: {ex.Message}");
+
+                MessageBox.Show(
+                    $"Error opening Rollback Manager:\n\n{ex.Message}",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
+        }
+
+        #endregion
+
+        #region ==>Helper Methods
+        private Dictionary<Guid, IOrganizationService> GetActiveServices()
+        {
+            var services = new Dictionary<Guid, IOrganizationService>();
+
+            try
+            {
+                // Get services from target environments
+                foreach (var target in targetEnvironments)
+                {
+                    if (target.ConnectionDetail != null &&
+                        target.ConnectionDetail.ConnectionId.HasValue &&
+                        target.ServiceClient != null &&
+                        target.ServiceClient.IsReady)
+                    {
+                        IOrganizationService service = null;
+
+                        if (target.ServiceClient.OrganizationWebProxyClient != null)
+                        {
+                            service = target.ServiceClient.OrganizationWebProxyClient;
+                            LogInfo($"✅ Captured active service for: {target.ConnectionDetail.ConnectionName} (WebProxy)");
+                        }
+                        else if (target.ServiceClient.OrganizationServiceProxy != null)
+                        {
+                            service = target.ServiceClient.OrganizationServiceProxy;
+                            LogInfo($"✅ Captured active service for: {target.ConnectionDetail.ConnectionName} (ServiceProxy)");
+                        }
+
+                        if (service != null)
+                        {
+                            services[target.ConnectionDetail.ConnectionId.Value] = service;
+                        }
+                    }
+                }
+
+                // Get service from current connection
+                if (ConnectionDetail != null &&
+                    ConnectionDetail.ConnectionId.HasValue &&
+                    Service != null)
+                {
+                    if (!services.ContainsKey(ConnectionDetail.ConnectionId.Value))
+                    {
+                        services[ConnectionDetail.ConnectionId.Value] = Service;
+                        LogInfo($"✅ Captured current connection service: {ConnectionDetail.ConnectionName}");
+                    }
+                }
+
+                LogInfo($"📋 Total active services captured: {services.Count}");
+            }
+            catch (Exception ex)
+            {
+                LogError($"❌ Error capturing active services: {ex.Message}");
+            }
+
+            return services;
+        }
+        private List<ConnectionDetail> GetAvailableConnections()
+        {
+            var connections = new List<ConnectionDetail>();
+
+            try
+            {
+                // Priority 1: Add target environment connections (these already have active ServiceClients)
+                foreach (var target in targetEnvironments)
+                {
+                    if (target.ConnectionDetail != null)
+                    {
+                        // Ensure ServiceClient is attached
+                        if (target.ServiceClient != null && target.ServiceClient.IsReady)
+                        {
+                            target.ConnectionDetail.ServiceClient = target.ServiceClient;
+                        }
+
+                        LogInfo($"✅ Adding target connection: {target.ConnectionDetail.ConnectionName}");
+                        connections.Add(target.ConnectionDetail);
+                    }
+                }
+
+                // Priority 2: Add current source connection (only if not already added)
+                if (ConnectionDetail != null)
+                {
+                    if (!connections.Any(c => c.ConnectionId == ConnectionDetail.ConnectionId))
+                    {
+                        LogInfo($"✅ Adding current connection: {ConnectionDetail.ConnectionName}");
+                        connections.Add(ConnectionDetail);
+                    }
+                }
+
+                // Priority 3: Load from XrmToolBox only if we have no connections
+                // Filter out SDK Login Control connections
+                if (connections.Count == 0)
+                {
+                    LogWarning("⚠️ No active connections found, loading from XrmToolBox...");
+
+                    var connectionService = new ConnectionService();
+                    var allConnections = connectionService.GetAllConnections();
+
+                    if (allConnections != null && allConnections.Count > 0)
+                    {
+                        // Filter out SDK Login Control connections
+                        var usableConnections = allConnections.Where(c =>
+                        {
+                            try
+                            {
+                                var useSdkLoginControl = c.GetType()
+                                    .GetProperty("UseSdkLoginControl")?
+                                    .GetValue(c);
+
+                                return useSdkLoginControl == null || !(bool)useSdkLoginControl;
+                            }
+                            catch
+                            {
+                                return true; // Include if we can't determine
+                            }
+                        }).ToList();
+
+                        connections.AddRange(usableConnections);
+                        LogInfo($"✅ Loaded {usableConnections.Count} connections from XrmToolBox");
+
+                        if (usableConnections.Count < allConnections.Count)
+                        {
+                            LogWarning($"⚠️ Filtered out {allConnections.Count - usableConnections.Count} SDK Login Control connection(s)");
+                        }
+                    }
+                    else
+                    {
+                        LogWarning("⚠️ No connections available in XrmToolBox");
+                    }
+                }
+
+                if (connections.Count > 0)
+                {
+                    LogInfo($"📋 Total available connections for rollback: {connections.Count}");
+                }
+                else
+                {
+                    LogError("❌ No connections available! Please connect to environments first.");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"❌ Error getting available connections: {ex.Message}");
+
+                MessageBox.Show(
+                    $"Error loading connections for rollback:\n\n{ex.Message}\n\n" +
+                    "Please ensure you have at least one active connection.",
+                    "Connection Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                connections = new List<ConnectionDetail>();
+            }
+
+            return connections;
         }
 
         #endregion

@@ -17,7 +17,7 @@
 
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RollbackForm));
             this.panelTop = new System.Windows.Forms.Panel();
             this.btnRefresh = new System.Windows.Forms.Button();
@@ -32,7 +32,7 @@
             this.colBackupFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelDetails = new System.Windows.Forms.Panel();
-            this.txtDetails = new System.Windows.Forms.TextBox();
+            this.txtDetails = new System.Windows.Forms.RichTextBox();
             this.lblDetails = new System.Windows.Forms.Label();
             this.panelBottom = new System.Windows.Forms.Panel();
             this.lblTotalDeployments = new System.Windows.Forms.Label();
@@ -111,14 +111,14 @@
             this.dgvDeployments.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvDeployments.BackgroundColor = System.Drawing.Color.White;
             this.dgvDeployments.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(215)))));
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvDeployments.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(215)))));
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvDeployments.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dgvDeployments.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDeployments.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colDate,
@@ -202,16 +202,16 @@
             // 
             // txtDetails
             // 
-            this.txtDetails.BackColor = System.Drawing.Color.White;
+            this.txtDetails.BackColor = System.Drawing.Color.Black;
             this.txtDetails.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtDetails.Font = new System.Drawing.Font("Consolas", 9F);
+            this.txtDetails.ForeColor = System.Drawing.Color.Lime;
             this.txtDetails.Location = new System.Drawing.Point(10, 30);
-            this.txtDetails.Multiline = true;
             this.txtDetails.Name = "txtDetails";
             this.txtDetails.ReadOnly = true;
-            this.txtDetails.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtDetails.Size = new System.Drawing.Size(980, 146);
             this.txtDetails.TabIndex = 1;
+            this.txtDetails.Text = "📋 Deployment Details : Please select a deployment from the table first...\n";
             // 
             // lblDetails
             // 
@@ -334,7 +334,7 @@
         private System.Windows.Forms.DataGridView dgvDeployments;
         private System.Windows.Forms.Panel panelDetails;
         private System.Windows.Forms.Label lblDetails;
-        private System.Windows.Forms.TextBox txtDetails;
+        private System.Windows.Forms.RichTextBox txtDetails;
         private System.Windows.Forms.Panel panelBottom;
         private System.Windows.Forms.Button btnRollback;
         private System.Windows.Forms.Button btnCancel;

@@ -43,6 +43,7 @@ namespace Sujan_Solution_Deployer
                     row.Cells[6].Value = item.DeployedAsManaged ? "Managed" : "Unmanaged";
                     row.Cells[7].Value = item.StatusDisplay;
                     row.Cells[8].Value = item.DurationDisplay;
+                    row.Cells[9].Value = item.Notes;
 
                     // Color code by status
                     if (item.Status == Models.DeploymentStatus.Completed)
@@ -81,6 +82,7 @@ namespace Sujan_Solution_Deployer
                     emptyRow.Cells[6].Value = "";
                     emptyRow.Cells[7].Value = "";
                     emptyRow.Cells[8].Value = "";
+                    emptyRow.Cells[9].Value = "";
                     dgvHistory.Rows.Add(emptyRow);
                     dgvHistory.Rows[0].DefaultCellStyle.Font = new Font(dgvHistory.Font, FontStyle.Italic);
                     dgvHistory.Rows[0].DefaultCellStyle.ForeColor = Color.Gray;
@@ -190,7 +192,8 @@ namespace Sujan_Solution_Deployer
                         row.Cells[5].Value,
                         row.Cells[6].Value,
                         row.Cells[7].Value?.ToString().Replace("✅", "").Replace("❌", "").Replace("⚠️", "").Trim(),
-                        row.Cells[8].Value);
+                        row.Cells[8].Value,
+                        row.Cells[9].Value);
 
                     writer.WriteLine(line);
                 }
@@ -223,6 +226,7 @@ namespace Sujan_Solution_Deployer
                          $"Status: {history.StatusDisplay}\n" +
                          $"Duration: {history.DurationDisplay}\n" +
                          $"Deployed By: {history.DeployedBy}\n" +
+                         $"Notes: {(history.Notes ?? "").Trim()}\n" +
                          $"Backup Created: {(history.BackupCreated ? "Yes" : "No")}\n";
 
             if (history.BackupCreated && !string.IsNullOrEmpty(history.BackupPath))

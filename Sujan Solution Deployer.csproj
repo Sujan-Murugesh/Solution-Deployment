@@ -302,15 +302,11 @@
       <DependentUpon>RollbackForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\ConnectionManager.cs" />
+    <Compile Include="Services\ConnectionService.cs" />
     <Compile Include="Services\DeploymentHistoryService.cs" />
     <Compile Include="Services\EmailNotificationService.cs" />
     <Compile Include="Services\SmtpSettingsManager.cs" />
     <Compile Include="Services\SolutionService.cs" />
-    <Compile Include="SmtpConfigurationForm.cs" />
-    <Compile Include="SmtpConfigurationForm.Designer.cs">
-      <DependentUpon>SmtpConfigurationForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SmtpDiagnosticForm.cs" />
     <Compile Include="SmtpConfigurationForm.cs">
       <SubType>Form</SubType>
     </Compile>

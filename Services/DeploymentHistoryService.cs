@@ -59,13 +59,16 @@ namespace Sujan_Solution_Deployer.Services
                         ErrorMessage TEXT,
                         DurationSeconds INTEGER,
                         BackupCreated INTEGER,
-                        BackupPath TEXT
+                        BackupPath TEXT,
+                        Notes TEXT
                     )";
 
                 using (var command = new SQLiteCommand(createTableQuery, connection))
                 {
                     command.ExecuteNonQuery();
                 }
+
+                AddNotesColumnIfNotExists(connection);
 
                 // Create index for faster queries
                 var createIndexQuery = @"
@@ -76,6 +79,46 @@ namespace Sujan_Solution_Deployer.Services
                 {
                     command.ExecuteNonQuery();
                 }
+            }
+        }
+
+        private void AddNotesColumnIfNotExists(SQLiteConnection connection)
+        {
+            try
+            {
+                // Check if Notes column exists
+                var checkColumnQuery = "PRAGMA table_info(DeploymentHistory)";
+                bool notesColumnExists = false;
+
+                using (var command = new SQLiteCommand(checkColumnQuery, connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (reader["name"].ToString() == "Notes")
+                            {
+                                notesColumnExists = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Add column if it doesn't exist
+                if (!notesColumnExists)
+                {
+                    var alterTableQuery = "ALTER TABLE DeploymentHistory ADD COLUMN Notes TEXT";
+                    using (var command = new SQLiteCommand(alterTableQuery, connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail initialization
+                System.Diagnostics.Debug.WriteLine($"Error adding Notes column: {ex.Message}");
             }
         }
 
@@ -90,12 +133,12 @@ namespace Sujan_Solution_Deployer.Services
                         DeploymentDate, SolutionUniqueName, SolutionFriendlyName,
                         SourceVersion, TargetVersion, SourceEnvironment, TargetEnvironment,
                         IsManaged, DeployedAsManaged, Status, DeployedBy, ErrorMessage,
-                        DurationSeconds, BackupCreated, BackupPath
+                        DurationSeconds, BackupCreated, BackupPath, Notes
                     ) VALUES (
                         @DeploymentDate, @SolutionUniqueName, @SolutionFriendlyName,
                         @SourceVersion, @TargetVersion, @SourceEnvironment, @TargetEnvironment,
                         @IsManaged, @DeployedAsManaged, @Status, @DeployedBy, @ErrorMessage,
-                        @DurationSeconds, @BackupCreated, @BackupPath
+                        @DurationSeconds, @BackupCreated, @BackupPath, @Notes
                     )";
 
                 using (var command = new SQLiteCommand(query, connection))
@@ -115,10 +158,16 @@ namespace Sujan_Solution_Deployer.Services
                     command.Parameters.AddWithValue("@DurationSeconds", history.DurationSeconds);
                     command.Parameters.AddWithValue("@BackupCreated", history.BackupCreated ? 1 : 0);
                     command.Parameters.AddWithValue("@BackupPath", history.BackupPath ?? string.Empty);
+                    command.Parameters.AddWithValue("@Notes", history.Notes ?? string.Empty);
 
                     command.ExecuteNonQuery();
                 }
             }
+        }
+
+        public void AddHistory(DeploymentHistory history)
+        {
+            AddDeployment(history);
         }
 
         public List<DeploymentHistory> GetAllHistory(int limit = 100)
@@ -249,7 +298,8 @@ namespace Sujan_Solution_Deployer.Services
                 ErrorMessage = reader["ErrorMessage"].ToString(),
                 DurationSeconds = Convert.ToInt32(reader["DurationSeconds"]),
                 BackupCreated = Convert.ToInt32(reader["BackupCreated"]) == 1,
-                BackupPath = reader["BackupPath"].ToString()
+                BackupPath = reader["BackupPath"].ToString(),
+                Notes = reader["Notes"] != DBNull.Value ? reader["Notes"].ToString() : string.Empty
             };
         }
     }
