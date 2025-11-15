@@ -57,5 +57,7 @@ namespace Sujan_Solution_Deployer.Models
                     return $"{ts.Seconds}s";
             }
         }
+
+        public string Notes { get; set; }
     }
 }

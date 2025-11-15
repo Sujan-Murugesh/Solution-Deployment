@@ -41,6 +41,7 @@
             this.colType = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colNotes = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelTop = new System.Windows.Forms.Panel();
             this.btnExport = new System.Windows.Forms.Button();
             this.btnClearHistory = new System.Windows.Forms.Button();
@@ -83,7 +84,8 @@
             this.colTargetEnv,
             this.colType,
             this.colStatus,
-            this.colDuration});
+            this.colDuration,
+            this.colNotes});
             this.dgvHistory.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvHistory.EnableHeadersVisualStyles = false;
             this.dgvHistory.Location = new System.Drawing.Point(0, 80);
@@ -157,6 +159,13 @@
             this.colDuration.HeaderText = "⏱️ Duration";
             this.colDuration.Name = "colDuration";
             this.colDuration.ReadOnly = true;
+            // 
+            // colNotes
+            // 
+            this.colNotes.FillWeight = 8F;
+            this.colNotes.HeaderText = "📝 Notes";
+            this.colNotes.Name = "colNotes";
+            this.colNotes.ReadOnly = true;
             // 
             // panelTop
             // 
@@ -331,5 +340,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colType;
         private System.Windows.Forms.DataGridViewTextBoxColumn colStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDuration;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colNotes;
     }
 }

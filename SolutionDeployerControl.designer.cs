@@ -32,8 +32,8 @@ namespace Sujan_Solution_Deployer
             this.grpBackup = new System.Windows.Forms.GroupBox();
             this.btnBrowseBackup = new System.Windows.Forms.Button();
             this.txtBackupPath = new System.Windows.Forms.TextBox();
-            this.txtNotificationEmail = new System.Windows.Forms.TextBox();
             this.chkEnableBackup = new System.Windows.Forms.CheckBox();
+            this.txtNotificationEmail = new System.Windows.Forms.TextBox();
             this.chkDeployAsManaged = new System.Windows.Forms.CheckBox();
             this.chkEmailNotification = new System.Windows.Forms.CheckBox();
             this.grpDeploymentOptions = new System.Windows.Forms.GroupBox();
@@ -46,19 +46,19 @@ namespace Sujan_Solution_Deployer
             this.lblProgress = new System.Windows.Forms.Label();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.tsbClose = new System.Windows.Forms.ToolStripButton();
-            this.tsbRollbackSolution = new System.Windows.Forms.ToolStripButton();
-            this.tsbHistory = new System.Windows.Forms.ToolStripButton();
-            this.tsbSmtpConfig = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator0 = new System.Windows.Forms.ToolStripSeparator();
+            this.tsbRollbackSolution = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.tsbDeploymentLogs = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.tsbHistory = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.tsbRefresh = new System.Windows.Forms.ToolStripButton();
-            this.tsbAbout = new System.Windows.Forms.ToolStripButton();
-            this.tsbHelp = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.tsbSmtpConfig = new System.Windows.Forms.ToolStripButton();
             this.tsbFeedback = new System.Windows.Forms.ToolStripButton();
+            this.tsbHelp = new System.Windows.Forms.ToolStripButton();
+            this.tsbAbout = new System.Windows.Forms.ToolStripButton();
             this.grpSourceEnvironment.SuspendLayout();
             this.grpTargetEnvironment.SuspendLayout();
             this.grpBackup.SuspendLayout();
@@ -236,6 +236,16 @@ namespace Sujan_Solution_Deployer
             this.chkEnableBackup.UseVisualStyleBackColor = true;
             this.chkEnableBackup.CheckedChanged += new System.EventHandler(this.chkEnableBackup_CheckedChanged);
             // 
+            // txtNotificationEmail
+            // 
+            this.txtNotificationEmail.Enabled = false;
+            this.txtNotificationEmail.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.txtNotificationEmail.Location = new System.Drawing.Point(790, 54);
+            this.txtNotificationEmail.Name = "txtNotificationEmail";
+            this.txtNotificationEmail.Size = new System.Drawing.Size(180, 22);
+            this.txtNotificationEmail.TabIndex = 6;
+            this.txtNotificationEmail.Text = "your.email@example.com";
+            // 
             // chkDeployAsManaged
             // 
             this.chkDeployAsManaged.AutoSize = true;
@@ -247,6 +257,18 @@ namespace Sujan_Solution_Deployer
             this.chkDeployAsManaged.Text = "🔒 Deploy Unmanaged as Managed Solution";
             this.chkDeployAsManaged.UseVisualStyleBackColor = true;
             this.chkDeployAsManaged.CheckedChanged += new System.EventHandler(this.chkDeployAsManaged_CheckedChanged);
+            // 
+            // chkEmailNotification
+            // 
+            this.chkEmailNotification.AutoSize = true;
+            this.chkEmailNotification.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.chkEmailNotification.Location = new System.Drawing.Point(650, 55);
+            this.chkEmailNotification.Name = "chkEmailNotification";
+            this.chkEmailNotification.Size = new System.Drawing.Size(136, 19);
+            this.chkEmailNotification.TabIndex = 5;
+            this.chkEmailNotification.Text = "📧 Email Notification";
+            this.chkEmailNotification.UseVisualStyleBackColor = true;
+            this.chkEmailNotification.CheckedChanged += new System.EventHandler(this.chkEmailNotification_CheckedChanged);
             // 
             // grpDeploymentOptions
             // 
@@ -315,29 +337,6 @@ namespace Sujan_Solution_Deployer
             this.rbUpdate.Text = "🔄 Update (Upgrade existing or install if new)";
             this.rbUpdate.UseVisualStyleBackColor = true;
             // 
-            // chkEmailNotification
-            // 
-            this.chkEmailNotification.AutoSize = true;
-            this.chkEmailNotification.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.chkEmailNotification.Location = new System.Drawing.Point(650, 55);
-            this.chkEmailNotification.Name = "chkEmailNotification";
-            this.chkEmailNotification.Size = new System.Drawing.Size(130, 19);
-            this.chkEmailNotification.TabIndex = 5;
-            this.chkEmailNotification.Text = "📧 Email Notification";
-            this.chkEmailNotification.UseVisualStyleBackColor = true;
-            this.chkEmailNotification.CheckedChanged += new System.EventHandler(this.chkEmailNotification_CheckedChanged);
-
-            // 
-            // txtNotificationEmail
-            // 
-            this.txtNotificationEmail.Enabled = false;
-            this.txtNotificationEmail.Font = new System.Drawing.Font("Segoe UI", 8F);
-            this.txtNotificationEmail.Location = new System.Drawing.Point(790, 54);
-            this.txtNotificationEmail.Name = "txtNotificationEmail";
-            this.txtNotificationEmail.Text = "your.email@example.com";
-            this.txtNotificationEmail.Size = new System.Drawing.Size(180, 22);
-            this.txtNotificationEmail.TabIndex = 6;
-            // 
             // btnDeploy
             // 
             this.btnDeploy.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -389,8 +388,7 @@ namespace Sujan_Solution_Deployer
             this.tsbSmtpConfig,
             this.tsbFeedback,
             this.tsbHelp,
-            this.tsbAbout
-            });
+            this.tsbAbout});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.Size = new System.Drawing.Size(1020, 25);
@@ -404,109 +402,100 @@ namespace Sujan_Solution_Deployer
             this.tsbClose.Size = new System.Drawing.Size(56, 22);
             this.tsbClose.Text = "Close";
             this.tsbClose.Click += new System.EventHandler(this.tsbClose_Click);
-            //
-            // tsbRollbackSolution
-            // 
-            this.tsbRollbackSolution.Image = null;
-            this.tsbRollbackSolution.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbRollbackSolution.Name = "tsbRollbackSolution";
-            this.tsbRollbackSolution.Size = new System.Drawing.Size(85, 22);
-            this.tsbRollbackSolution.Text = "📜 Rollback Solution";
-            this.tsbRollbackSolution.Click += new System.EventHandler(this.tsbRollbackSolution_Click);
-            //
-            // tsbHistory
-            // 
-            this.tsbHistory.Image = null;
-            this.tsbHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbHistory.Name = "tsbHistory";
-            this.tsbHistory.Size = new System.Drawing.Size(85, 22);
-            this.tsbHistory.Text = "📜 History";
-            this.tsbHistory.Click += new System.EventHandler(this.tsbHistory_Click);
-            // 
-            // tsbRefresh
-            // 
-            this.tsbRefresh.Image = null;
-            this.tsbRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbRefresh.Name = "tsbRefresh";
-            this.tsbRefresh.Size = new System.Drawing.Size(70, 22);
-            this.tsbRefresh.Text = "🔄 Refresh";
-            this.tsbRefresh.Click += new System.EventHandler(this.tsbRefresh_Click);
-            // 
-            // tsbAbout
-            // 
-            this.tsbAbout.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbAbout.Image = null;
-            this.tsbAbout.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbAbout.Name = "tsbAbout";
-            this.tsbAbout.Size = new System.Drawing.Size(65, 22);
-            this.tsbAbout.Text = "ℹ️ About";
-            this.tsbAbout.Click += new System.EventHandler(this.tsbAbout_Click);
-
-            // 
-            // tsbHelp
-            // 
-            this.tsbHelp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbHelp.Image = null;
-            this.tsbHelp.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbHelp.Name = "tsbHelp";
-            this.tsbHelp.Size = new System.Drawing.Size(60, 22);
-            this.tsbHelp.Text = "❓ Help";
-            this.tsbHelp.Click += new System.EventHandler(this.tsbHelp_Click);
-
-            // 
-            // tsbFeedback
-            // 
-            this.tsbFeedback.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbFeedback.Image = null;
-            this.tsbFeedback.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbFeedback.Name = "tsbFeedback";
-            this.tsbFeedback.Size = new System.Drawing.Size(80, 22);
-            this.tsbFeedback.Text = "💬 Feedback";
-            this.tsbFeedback.Click += new System.EventHandler(this.tsbFeedback_Click);
-            // 
-            // tsbSmtpConfig
-            // 
-            this.tsbSmtpConfig.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbSmtpConfig.Image = null;
-            this.tsbSmtpConfig.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbSmtpConfig.Name = "tsbSmtpConfig";
-            this.tsbSmtpConfig.Size = new System.Drawing.Size(95, 22);
-            this.tsbSmtpConfig.Text = "📧 SMTP Setup";
-            this.tsbSmtpConfig.Click += new System.EventHandler(this.tsbSmtpConfig_Click);
             // 
             // toolStripSeparator0
             // 
             this.toolStripSeparator0.Name = "toolStripSeparator0";
             this.toolStripSeparator0.Size = new System.Drawing.Size(6, 25);
             // 
+            // tsbRollbackSolution
+            // 
+            this.tsbRollbackSolution.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbRollbackSolution.Name = "tsbRollbackSolution";
+            this.tsbRollbackSolution.Size = new System.Drawing.Size(118, 22);
+            this.tsbRollbackSolution.Text = "♻️ Rollback Solution";
+            this.tsbRollbackSolution.Click += new System.EventHandler(this.tsbRollbackSolution_Click);
+            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-            //
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripSeparator4
-            // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
-            this.toolStripSeparator4.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             // 
             // tsbDeploymentLogs
             // 
             this.tsbDeploymentLogs.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tsbDeploymentLogs.Name = "tsbDeploymentLogs";
             this.tsbDeploymentLogs.Size = new System.Drawing.Size(119, 22);
-            this.tsbDeploymentLogs.Text = "📋 Deployment Logs";
+            this.tsbDeploymentLogs.Text = "🖥️ Deployment Logs";
             this.tsbDeploymentLogs.Click += new System.EventHandler(this.tsbDeploymentLogs_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
+            // tsbHistory
+            // 
+            this.tsbHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbHistory.Name = "tsbHistory";
+            this.tsbHistory.Size = new System.Drawing.Size(64, 22);
+            this.tsbHistory.Text = "🕘 History";
+            this.tsbHistory.Click += new System.EventHandler(this.tsbHistory_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+            // 
+            // tsbRefresh
+            // 
+            this.tsbRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbRefresh.Name = "tsbRefresh";
+            this.tsbRefresh.Size = new System.Drawing.Size(65, 22);
+            this.tsbRefresh.Text = "🔄 Refresh";
+            this.tsbRefresh.Click += new System.EventHandler(this.tsbRefresh_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+            // 
+            // tsbSmtpConfig
+            // 
+            this.tsbSmtpConfig.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbSmtpConfig.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbSmtpConfig.Name = "tsbSmtpConfig";
+            this.tsbSmtpConfig.Size = new System.Drawing.Size(90, 22);
+            this.tsbSmtpConfig.Text = "📧 SMTP Setup";
+            this.tsbSmtpConfig.Click += new System.EventHandler(this.tsbSmtpConfig_Click);
+            // 
+            // tsbFeedback
+            // 
+            this.tsbFeedback.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbFeedback.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbFeedback.Name = "tsbFeedback";
+            this.tsbFeedback.Size = new System.Drawing.Size(76, 22);
+            this.tsbFeedback.Text = "💬 Feedback";
+            this.tsbFeedback.Click += new System.EventHandler(this.tsbFeedback_Click);
+            // 
+            // tsbHelp
+            // 
+            this.tsbHelp.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbHelp.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbHelp.Name = "tsbHelp";
+            this.tsbHelp.Size = new System.Drawing.Size(51, 22);
+            this.tsbHelp.Text = "❓ Help";
+            this.tsbHelp.Click += new System.EventHandler(this.tsbHelp_Click);
+            // 
+            // tsbAbout
+            // 
+            this.tsbAbout.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.tsbAbout.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbAbout.Name = "tsbAbout";
+            this.tsbAbout.Size = new System.Drawing.Size(59, 22);
+            this.tsbAbout.Text = "ℹ️ About";
+            this.tsbAbout.Click += new System.EventHandler(this.tsbAbout_Click);
             // 
             // SolutionDeployerControl
             // 
@@ -536,6 +525,7 @@ namespace Sujan_Solution_Deployer
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
         #endregion
 

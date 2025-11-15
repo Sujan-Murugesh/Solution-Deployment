@@ -8,9 +8,7 @@ namespace Sujan_Solution_Deployer.Services
 {
     public static class ConnectionManager
     {
-        /// <summary>
         /// Gets the IOrganizationService from a ConnectionDetail
-        /// </summary>
         public static IOrganizationService GetOrganizationService(ConnectionDetail connectionDetail)
         {
             if (connectionDetail == null)
@@ -44,9 +42,7 @@ namespace Sujan_Solution_Deployer.Services
             }
         }
 
-        /// <summary>
         /// Creates a CrmServiceClient from ConnectionDetail
-        /// </summary>
         public static CrmServiceClient CreateServiceClient(ConnectionDetail connectionDetail)
         {
             if (connectionDetail == null)
@@ -72,9 +68,7 @@ namespace Sujan_Solution_Deployer.Services
             }
         }
 
-        /// <summary>
         /// Builds a connection string from ConnectionDetail using reflection for compatibility
-        /// </summary>
         private static string BuildConnectionString(ConnectionDetail connectionDetail)
         {
             var connectionType = connectionDetail.GetType();
@@ -206,9 +200,6 @@ namespace Sujan_Solution_Deployer.Services
             return connString;
         }
 
-        /// <summary>
-        /// Test if connection is valid
-        /// </summary>
         public static bool TestConnection(ConnectionDetail connectionDetail, out string errorMessage)
         {
             errorMessage = string.Empty;
