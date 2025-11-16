@@ -285,6 +285,7 @@
     <Compile Include="FeedbackForm.Designer.cs">
       <DependentUpon>FeedbackForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\StringExtensions.cs" />
     <Compile Include="Models\DeploymentHistory.cs" />
     <Compile Include="Models\DeploymentProgress.cs" />
     <Compile Include="Models\DeploymentTarget.cs" />
@@ -305,6 +306,8 @@
     <Compile Include="Services\ConnectionService.cs" />
     <Compile Include="Services\DeploymentHistoryService.cs" />
     <Compile Include="Services\EmailNotificationService.cs" />
+    <Compile Include="Services\EmailSettingsManager.cs" />
+    <Compile Include="Services\ImageHelper.cs" />
     <Compile Include="Services\SmtpSettingsManager.cs" />
     <Compile Include="Services\SolutionService.cs" />
     <Compile Include="SmtpConfigurationForm.cs">
@@ -335,6 +338,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assert\logo.png" />
     <None Include="app.config" />
     <Content Include="Assert\App-Passwordkey-Generation-Guide.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

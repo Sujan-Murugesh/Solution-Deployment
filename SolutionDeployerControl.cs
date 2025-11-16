@@ -11,12 +11,14 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using XrmToolBox.Extensibility;
 using ConnectionManager = Sujan_Solution_Deployer.Services.ConnectionManager;
 using Label = System.Windows.Forms.Label;
 using SolutionInfo = Sujan_Solution_Deployer.Models.SolutionInfo;
+using Sujan_Solution_Deployer.Helpers;
 
 namespace Sujan_Solution_Deployer
 {
@@ -30,6 +32,8 @@ namespace Sujan_Solution_Deployer
         private DeploymentLogForm logForm = null;
         private DeploymentHistoryService deploymentHistoryService;
         private EmailNotificationService emailNotificationService;
+        private EmailSettings emailSettings;
+        private string lastSavedEmail;
         public SolutionDeployerControl()
         {
             InitializeComponent();
@@ -45,6 +49,29 @@ namespace Sujan_Solution_Deployer
             InitializeDefaultSettings();
             InitializeLogForm();
             LoadSmtpSettings();
+            LoadEmailNotificationSettings();
+        }
+
+        private void LoadEmailNotificationSettings()
+        {
+            try
+            {
+                emailSettings = EmailSettingsManager.LoadSettings();
+
+                if (!string.IsNullOrWhiteSpace(emailSettings.NotificationEmail))
+                {
+                    txtNotificationEmail.Text = emailSettings.NotificationEmail;
+                    txtNotificationEmail.ForeColor = Color.Black;
+                    chkEmailNotification.Checked = emailSettings.EmailNotificationEnabled;
+                    lastSavedEmail = emailSettings.NotificationEmail;
+
+                    LogInfo($"📧 Loaded saved notification email: {emailSettings.NotificationEmail}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWarning($"⚠️ Could not load email notification settings: {ex.Message}");
+            }
         }
 
         /// Load saved SMTP settings and configure email service
@@ -372,7 +399,6 @@ namespace Sujan_Solution_Deployer
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 StartDeployment(selectedSolutions, selectedTargets, updatedVersions, updateInSource, notificationEmail);
-                //StartDeployment(selectedSolutions, selectedTargets, updatedVersions, updateInSource);
             }
         }
 
@@ -732,13 +758,15 @@ namespace Sujan_Solution_Deployer
 
                                 LogInfo($"\n📧 Sending email notification to {notificationEmail}...");
 
+                                // Pass the deployment list for detailed email
                                 EmailNotificationService.SendBatchDeploymentSummary(
                                     notificationEmail,
                                     result.Results.Count,
                                     result.SuccessCount,
                                     result.FailureCount,
                                     result.StartTime,
-                                    result.EndTime);
+                                    result.EndTime,
+                                    result.Results);
 
                                 LogInfo("✅ Email notification sent successfully");
                             }
@@ -954,6 +982,7 @@ namespace Sujan_Solution_Deployer
         {
             var endTime = DateTime.Now;
             var duration = (int)(endTime - startTime).TotalSeconds;
+            string notes = GenerateDeploymentNotes(status, errorMessage, sourceVersion, targetVersion, exportAsManaged, deployingAsManaged);
 
             var history = new DeploymentHistory
             {
@@ -971,7 +1000,8 @@ namespace Sujan_Solution_Deployer
                 ErrorMessage = errorMessage,
                 DurationSeconds = duration,
                 BackupCreated = chkEnableBackup.Checked,
-                BackupPath = backupPath
+                BackupPath = backupPath,
+                Notes = notes
             };
 
             try
@@ -983,9 +1013,8 @@ namespace Sujan_Solution_Deployer
                 System.Diagnostics.Debug.WriteLine($"Could not save history: {ex.Message}");
             }
 
-            return history;  // ✅ Return the history object
+            return history;
         }
-
 
         private List<DeploymentHistory> SaveFailedDeploymentHistory(
             SolutionInfo solution,
@@ -997,6 +1026,9 @@ namespace Sujan_Solution_Deployer
             var endTime = DateTime.Now;
             var duration = (int)(endTime - startTime).TotalSeconds;
             var histories = new List<DeploymentHistory>();
+
+            string notes = $"Pre-deployment failure. {ExtractFailureReason(errorMessage)}. " +
+                  $"Error occurred before solution export or import could begin.";
 
             foreach (var target in targets)
             {
@@ -1016,7 +1048,8 @@ namespace Sujan_Solution_Deployer
                     ErrorMessage = errorMessage,
                     DurationSeconds = duration,
                     BackupCreated = false,
-                    BackupPath = null
+                    BackupPath = null,
+                    Notes = notes
                 };
 
                 try
@@ -1032,6 +1065,128 @@ namespace Sujan_Solution_Deployer
 
             return histories;  // ✅ Return the list of histories
         }
+
+        private string GenerateDeploymentNotes(
+            DeploymentStatus status,
+            string errorMessage,
+            string sourceVersion,
+            string targetVersion,
+            bool exportAsManaged,
+            bool deployingAsManaged)
+        {
+            var notes = new StringBuilder();
+
+            // Add deployment type info
+            if (deployingAsManaged)
+            {
+                notes.Append("Converted from unmanaged to managed. ");
+            }
+            else if (exportAsManaged)
+            {
+                notes.Append("Deployed as managed solution. ");
+            }
+            else
+            {
+                notes.Append("Deployed as unmanaged solution. ");
+            }
+
+            // Add version info
+            notes.Append($"Version: {sourceVersion} → {targetVersion}. ");
+
+            // Add status-specific notes
+            switch (status)
+            {
+                case DeploymentStatus.Completed:
+                    notes.Append("Deployment completed successfully.");
+                    break;
+
+                case DeploymentStatus.Failed:
+                    notes.Append("Deployment failed. ");
+
+                    // Extract concise error reason
+                    string reason = ExtractFailureReason(errorMessage);
+                    notes.Append($"Reason: {reason}");
+                    break;
+
+                case DeploymentStatus.Cancelled:
+                    notes.Append("Deployment was cancelled by user.");
+                    break;
+
+                default:
+                    notes.Append("Deployment status unknown.");
+                    break;
+            }
+
+            return notes.ToString();
+        }
+
+        private string ExtractFailureReason(string errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(errorMessage))
+            {
+                return "Unknown error";
+            }
+
+            // Extract first line or first 150 characters
+            var lines = errorMessage.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            string firstLine = lines.Length > 0 ? lines[0].Trim() : errorMessage;
+
+            // Common error patterns to simplify (using extension method)
+            if (firstLine.ContainsIgnoreCase("connection"))
+            {
+                return "Connection error";
+            }
+            if (firstLine.ContainsIgnoreCase("timeout"))
+            {
+                return "Operation timeout";
+            }
+            if (firstLine.ContainsIgnoreCase("permission") ||
+                firstLine.ContainsIgnoreCase("access denied"))
+            {
+                return "Permission denied";
+            }
+            if (firstLine.ContainsIgnoreCase("already exists"))
+            {
+                return "Component already exists";
+            }
+            if (firstLine.ContainsIgnoreCase("missing") ||
+                firstLine.ContainsIgnoreCase("not found"))
+            {
+                return "Required component missing";
+            }
+            if (firstLine.ContainsIgnoreCase("dependencies"))
+            {
+                return "Missing dependencies";
+            }
+            if (firstLine.ContainsIgnoreCase("version") &&
+                firstLine.ContainsIgnoreCase("lower"))
+            {
+                return "Solution version conflict";
+            }
+            if (firstLine.ContainsIgnoreCase("underlying connection"))
+            {
+                return "Connection closed by server";
+            }
+            if (firstLine.ContainsIgnoreCase("authentication") ||
+                firstLine.ContainsIgnoreCase("unauthorized"))
+            {
+                return "Authentication failed";
+            }
+            if (firstLine.ContainsIgnoreCase("maximum") &&
+                firstLine.ContainsIgnoreCase("exceeded"))
+            {
+                return "Resource limit exceeded";
+            }
+
+            // Return truncated error message
+            if (firstLine.Length > 150)
+            {
+                return firstLine.Substring(0, 147) + "...";
+            }
+
+            return firstLine;
+        }
+
         #endregion
 
         #region==>Email Notification
@@ -1053,7 +1208,7 @@ namespace Sujan_Solution_Deployer
                 var inputForm = new Form
                 {
                     Text = "Email Notification",
-                    Size = new Size(450, 180),
+                    Size = new Size(450, 220),
                     StartPosition = FormStartPosition.CenterParent,
                     FormBorderStyle = FormBorderStyle.FixedDialog,
                     MinimizeBox = false,
@@ -1075,10 +1230,19 @@ namespace Sujan_Solution_Deployer
                     Font = new Font("Segoe UI", 9F)
                 };
 
+                var chkRemember = new CheckBox
+                {
+                    Text = "Remember this email for future deployments",
+                    Location = new Point(20, 100),
+                    Size = new Size(400, 20),
+                    Font = new Font("Segoe UI", 9F),
+                    Checked = true
+                };
+
                 var btnOk = new Button
                 {
                     Text = "✅ OK",
-                    Location = new Point(245, 100),
+                    Location = new Point(245, 140),
                     Size = new Size(85, 30),
                     DialogResult = DialogResult.OK,
                     Font = new Font("Segoe UI", 9F, FontStyle.Bold)
@@ -1087,13 +1251,13 @@ namespace Sujan_Solution_Deployer
                 var btnCancel = new Button
                 {
                     Text = "❌ Cancel",
-                    Location = new Point(335, 100),
+                    Location = new Point(335, 140),
                     Size = new Size(85, 30),
                     DialogResult = DialogResult.Cancel,
                     Font = new Font("Segoe UI", 9F)
                 };
 
-                inputForm.Controls.AddRange(new Control[] { lblPrompt, txtEmail, btnOk, btnCancel });
+                inputForm.Controls.AddRange(new Control[] { lblPrompt, txtEmail, chkRemember, btnOk, btnCancel });
                 inputForm.AcceptButton = btnOk;
                 inputForm.CancelButton = btnCancel;
 
@@ -1106,6 +1270,14 @@ namespace Sujan_Solution_Deployer
                         // Save the email back to the textbox
                         txtNotificationEmail.Text = email;
                         txtNotificationEmail.ForeColor = Color.Black;
+
+                        // Save if user wants to remember
+                        if (chkRemember.Checked)
+                        {
+                            SaveEmailSettings(email, true);
+                            lastSavedEmail = email;
+                        }
+
                         return email;
                     }
                     else
@@ -1122,6 +1294,39 @@ namespace Sujan_Solution_Deployer
             // Validate existing email
             if (IsValidEmail(email))
             {
+                // Check if email changed from last saved
+                if (!string.IsNullOrWhiteSpace(lastSavedEmail) &&
+                    !email.Equals(lastSavedEmail, StringComparison.OrdinalIgnoreCase))
+                {
+                    var result = MessageBox.Show(
+                        $"Email address has changed from:\n{lastSavedEmail}\n\nto:\n{email}\n\n" +
+                        "Do you want to save this new email for future deployments?",
+                        "Save Email Address?",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        SaveEmailSettings(email, chkEmailNotification.Checked);
+                        lastSavedEmail = email;
+                    }
+                }
+                else if (string.IsNullOrWhiteSpace(lastSavedEmail))
+                {
+                    // First time using this email - ask to save
+                    var result = MessageBox.Show(
+                        $"Do you want to save this email address ({email}) for future deployments?",
+                        "Save Email Address?",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        SaveEmailSettings(email, chkEmailNotification.Checked);
+                        lastSavedEmail = email;
+                    }
+                }
+
                 return email;
             }
             else
@@ -1130,6 +1335,25 @@ namespace Sujan_Solution_Deployer
                     "Invalid Email", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtNotificationEmail.Focus();
                 return null;
+            }
+        }
+
+        private void SaveEmailSettings(string email, bool enabled)
+        {
+            try
+            {
+                var settings = new EmailSettings
+                {
+                    NotificationEmail = email,
+                    EmailNotificationEnabled = enabled
+                };
+
+                EmailSettingsManager.SaveSettings(settings);
+                LogInfo($"✅ Saved email notification settings: {email}");
+            }
+            catch (Exception ex)
+            {
+                LogWarning($"⚠️ Could not save email settings: {ex.Message}");
             }
         }
 
@@ -1556,9 +1780,18 @@ namespace Sujan_Solution_Deployer
         private void chkEmailNotification_CheckedChanged(object sender, EventArgs e)
         {
             txtNotificationEmail.Enabled = chkEmailNotification.Checked;
+
             if (chkEmailNotification.Checked)
             {
                 txtNotificationEmail.Focus();
+            }
+            else
+            {
+                // If user unchecks, update saved settings
+                if (!string.IsNullOrWhiteSpace(lastSavedEmail))
+                {
+                    SaveEmailSettings(lastSavedEmail, false);
+                }
             }
         }
 
