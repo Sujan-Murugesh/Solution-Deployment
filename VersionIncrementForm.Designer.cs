@@ -189,7 +189,6 @@
             // 
             // lblManualInstruction
             // 
-            this.lblManualInstruction.AutoSize = true;
             this.lblManualInstruction.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.lblManualInstruction.Location = new System.Drawing.Point(20, 25);
             this.lblManualInstruction.Name = "lblManualInstruction";
@@ -268,7 +267,6 @@
             this.grpAutoIncrement.ResumeLayout(false);
             this.grpAutoIncrement.PerformLayout();
             this.grpManualEntry.ResumeLayout(false);
-            this.grpManualEntry.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
