@@ -2,7 +2,7 @@
 # Power Platform Solution Deployment Tool
 
 [![NuGet](https://img.shields.io/nuget/v/YourPackageName.svg)](https://www.nuget.org/packages/YourPackageName/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
 A comprehensive solution deployment and management tool for Microsoft Power Platform that streamlines the process of deploying solutions across multiple environments with advanced features like version control, automated backups, and rollback capabilities.
 
