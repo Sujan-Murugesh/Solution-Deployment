@@ -176,7 +176,7 @@ namespace Sujan_Solution_Deployer
             using (var writer = new StreamWriter(filePath))
             {
                 // Write header
-                writer.WriteLine("Date,Solution,Source Version,Target Version,Source Environment,Target Environment,Type,Status,Duration");
+                writer.WriteLine("Date,Solution,Source Version,Target Version,Source Environment,Target Environment,Type,Status,Duration,Notes");
 
                 // Write rows
                 foreach (DataGridViewRow row in dgvHistory.Rows)
