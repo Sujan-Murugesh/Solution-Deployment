@@ -261,28 +261,28 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AboutForm.cs">
+    <Compile Include="Forms\AboutForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AboutForm.Designer.cs">
+    <Compile Include="Forms\AboutForm.Designer.cs">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DeploymentHistoryForm.cs">
+    <Compile Include="Forms\DeploymentHistoryForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DeploymentHistoryForm.Designer.cs">
+    <Compile Include="Forms\DeploymentHistoryForm.Designer.cs">
       <DependentUpon>DeploymentHistoryForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="DeploymentLogForm.cs">
+    <Compile Include="Forms\DeploymentLogForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DeploymentLogForm.Designer.cs">
+    <Compile Include="Forms\DeploymentLogForm.Designer.cs">
       <DependentUpon>DeploymentLogForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="FeedbackForm.cs">
+    <Compile Include="Forms\FeedbackForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FeedbackForm.Designer.cs">
+    <Compile Include="Forms\FeedbackForm.Designer.cs">
       <DependentUpon>FeedbackForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Helpers\StringExtensions.cs" />
@@ -296,10 +296,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RollbackForm.cs">
+    <Compile Include="Forms\RollbackForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="RollbackForm.Designer.cs">
+    <Compile Include="Forms\RollbackForm.Designer.cs">
       <DependentUpon>RollbackForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\ConnectionManager.cs" />
@@ -309,16 +309,16 @@
     <Compile Include="Services\EmailSettingsManager.cs" />
     <Compile Include="Services\SmtpSettingsManager.cs" />
     <Compile Include="Services\SolutionService.cs" />
-    <Compile Include="SmtpConfigurationForm.cs">
+    <Compile Include="Forms\SmtpConfigurationForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SmtpConfigurationForm.Designer.cs">
+    <Compile Include="Forms\SmtpConfigurationForm.Designer.cs">
       <DependentUpon>SmtpConfigurationForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="SmtpDiagnosticForm.cs">
+    <Compile Include="Forms\SmtpDiagnosticForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SmtpDiagnosticForm.Designer.cs">
+    <Compile Include="Forms\SmtpDiagnosticForm.Designer.cs">
       <DependentUpon>SmtpDiagnosticForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SolutionDeployerControl.cs">
@@ -329,19 +329,16 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="VersionIncrementForm.cs">
+    <Compile Include="Forms\VersionIncrementForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="VersionIncrementForm.Designer.cs">
+    <Compile Include="Forms\VersionIncrementForm.Designer.cs">
       <DependentUpon>VersionIncrementForm.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Assert\logo.png" />
     <None Include="app.config" />
-    <Content Include="Assert\App-Passwordkey-Generation-Guide.pdf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -350,32 +347,32 @@
     <Content Include="Assert\logo-80.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="AboutForm.resx">
+    <EmbeddedResource Include="Forms\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DeploymentLogForm.resx">
+    <EmbeddedResource Include="Forms\DeploymentLogForm.resx">
       <DependentUpon>DeploymentLogForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FeedbackForm.resx">
+    <EmbeddedResource Include="Forms\FeedbackForm.resx">
       <DependentUpon>FeedbackForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="RollbackForm.resx">
+    <EmbeddedResource Include="Forms\RollbackForm.resx">
       <DependentUpon>RollbackForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SmtpConfigurationForm.resx">
+    <EmbeddedResource Include="Forms\SmtpConfigurationForm.resx">
       <DependentUpon>SmtpConfigurationForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SmtpDiagnosticForm.resx">
+    <EmbeddedResource Include="Forms\SmtpDiagnosticForm.resx">
       <DependentUpon>SmtpDiagnosticForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SolutionDeployerControl.resx">
       <DependentUpon>SolutionDeployerControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="VersionIncrementForm.resx">
+    <EmbeddedResource Include="Forms\VersionIncrementForm.resx">
       <DependentUpon>VersionIncrementForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
