@@ -307,7 +307,6 @@
     <Compile Include="Services\DeploymentHistoryService.cs" />
     <Compile Include="Services\EmailNotificationService.cs" />
     <Compile Include="Services\EmailSettingsManager.cs" />
-    <Compile Include="Services\ImageHelper.cs" />
     <Compile Include="Services\SmtpSettingsManager.cs" />
     <Compile Include="Services\SolutionService.cs" />
     <Compile Include="SmtpConfigurationForm.cs">
