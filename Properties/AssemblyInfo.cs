@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sujan")]
 [assembly: AssemblyProduct("Sujan Solution Deployer")]
-[assembly: AssemblyCopyright("Copyright © 2025 Sujan Solutions")]
+[assembly: AssemblyCopyright("Copyright © 2025 Murugesh Sujan")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
