@@ -213,9 +213,10 @@ namespace Sujan_Solution_Deployer
             // 
             // txtTestEmail
             // 
+            this.txtTestEmail.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtTestEmail.Location = new System.Drawing.Point(125, 413);
             this.txtTestEmail.Name = "txtTestEmail";
-            this.txtTestEmail.Size = new System.Drawing.Size(262, 20);
+            this.txtTestEmail.Size = new System.Drawing.Size(262, 21);
             this.txtTestEmail.TabIndex = 2;
             // 
             // btnTest
@@ -248,7 +249,6 @@ namespace Sujan_Solution_Deployer
             // 
             // btnSmtpDiagnostic
             // 
-            this.btnSmtpDiagnostic.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnSmtpDiagnostic.Location = new System.Drawing.Point(168, 460);
             this.btnSmtpDiagnostic.Name = "btnSmtpDiagnostic";
             this.btnSmtpDiagnostic.Size = new System.Drawing.Size(131, 35);
@@ -283,14 +283,12 @@ namespace Sujan_Solution_Deployer
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.HelpButton = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "SmtpConfigurationForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Sujan Solution Deployer - SMTP Configuration";
-            this.HelpButtonClicked += new System.ComponentModel.CancelEventHandler(this.controlHelpPdfOpen);
             this.grpSmtpSettings.ResumeLayout(false);
             this.grpSmtpSettings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numSmtpPort)).EndInit();
@@ -323,6 +321,5 @@ namespace Sujan_Solution_Deployer
         private Button btnCancel;
         private Button btnSmtpDiagnostic;
         private Button btnClearSettings;
-        //private Button btnClearSettings;
     }
 }

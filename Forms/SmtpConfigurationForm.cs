@@ -319,29 +319,29 @@ namespace Sujan_Solution_Deployer
             }
         }
 
-        private void controlHelpPdfOpen(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            try
-            {
-                string pdfPath = Path.Combine(Application.StartupPath, "Assets", "App-Passwordkey-Generation-Guide.pdf");
+        //private void controlHelpPdfOpen(object sender, System.ComponentModel.CancelEventArgs e)
+        //{
+        //    try
+        //    {
+        //        string pdfPath = Path.Combine(Application.StartupPath, "Assets", "App-Passwordkey-Generation-Guide.pdf");
 
-                if (!File.Exists(pdfPath))
-                {
-                    MessageBox.Show("Help file not found:\n" + pdfPath, "File Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
+        //        if (!File.Exists(pdfPath))
+        //        {
+        //            MessageBox.Show("Help file not found:\n" + pdfPath, "File Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //            return;
+        //        }
 
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = pdfPath,
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Unable to open help PDF.\n\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        //        Process.Start(new ProcessStartInfo
+        //        {
+        //            FileName = pdfPath,
+        //            UseShellExecute = true
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Unable to open help PDF.\n\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //}
 
         private void btnSmtpDiagnostic_Click(object sender, EventArgs e)
         {
