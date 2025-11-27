@@ -44,17 +44,17 @@ A comprehensive solution deployment and management tool for Microsoft Power Plat
 
 ### Via NuGet Package Manager
 ```bash
-Install-Package YourPackageName
+Install-Package SujanSolutionDeployer --version 1.0.0
 ```
 
 ### Via .NET CLI
 ```bash
-dotnet add package YourPackageName
+dotnet add package SujanSolutionDeployer --version 1.0.0
 ```
 
 ### Via Package Manager Console
 ```powershell
-PM> Install-Package YourPackageName
+NuGet\Install-Package SujanSolutionDeployer -Version 1.0.0
 ```
 
 ## 🎯 Quick Start
