@@ -349,6 +349,7 @@
     <None Include="SujanSolutionDeployer.nuspec" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="icon.png" />
     <Content Include="nuget.exe" />
     <None Include="Assert\deployer-logo.gif" />
     <Content Include="Assert\logo-32.png" />
@@ -400,6 +401,9 @@
     <Analyzer Include="packages\Microsoft.VisualStudio.Threading.Analyzers.17.13.2\analyzers\vb\Microsoft.VisualStudio.Threading.Analyzers.CodeFixes.dll" />
     <Analyzer Include="packages\Microsoft.VisualStudio.Threading.Analyzers.17.13.2\analyzers\vb\Microsoft.VisualStudio.Threading.Analyzers.dll" />
     <Analyzer Include="packages\Microsoft.VisualStudio.Threading.Analyzers.17.13.2\analyzers\vb\Microsoft.VisualStudio.Threading.Analyzers.VisualBasic.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Screenshots\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
