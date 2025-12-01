@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Sujan_Solution_Deployer</RootNamespace>
-    <AssemblyName>Sujan Solution Deployer</AssemblyName>
+    <AssemblyName>SujanSolutionDeployer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -30,7 +30,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="McTools.Xrm.Connection, Version=1.2025.7.63, Culture=neutral, PublicKeyToken=96037217801d9658, processorArchitecture=MSIL">
@@ -268,6 +268,12 @@
     <Compile Include="Forms\FeedbackForm.Designer.cs">
       <DependentUpon>FeedbackForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\HelpForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\HelpForm.Designer.cs">
+      <DependentUpon>HelpForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Helpers\StringExtensions.cs" />
     <Compile Include="Models\DeploymentHistory.cs" />
     <Compile Include="Models\DeploymentProgress.cs" />
@@ -320,11 +326,30 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitattributes" />
+    <None Include=".gitignore" />
     <None Include="Assert\logo.png" />
     <None Include="app.config" />
+    <None Include="LICENSE" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.0.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.1.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.10.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.11.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.2.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.3.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.4.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.5.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.6.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.7.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.8.nupkg" />
+    <None Include="nupkgs\SujanSolutionDeployer.1.0.9.nupkg" />
     <None Include="packages.config" />
+    <None Include="plugin.json" />
+    <None Include="README.md" />
+    <None Include="SujanSolutionDeployer.nuspec" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="nuget.exe" />
     <None Include="Assert\deployer-logo.gif" />
     <Content Include="Assert\logo-32.png" />
     <Content Include="Assert\logo-80.png" />
@@ -338,6 +363,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\FeedbackForm.resx">
       <DependentUpon>FeedbackForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\HelpForm.resx">
+      <DependentUpon>HelpForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
