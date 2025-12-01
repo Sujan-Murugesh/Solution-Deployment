@@ -6,6 +6,10 @@
 
 A comprehensive solution deployment and management tool for Microsoft Power Platform that streamlines the process of deploying solutions across multiple environments with advanced features like version control, automated backups, and rollback capabilities.
 
+
+
+![Solution Deployer Screenshot](https://raw.githubusercontent.com/Sujan-Murugesh/Solution-Deployment/master/Screenshots/1.png "Solution Deployer UI")
+
 ## 🚀 Features
 
 ### Core Functionality
