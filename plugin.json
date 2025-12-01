@@ -1,0 +1,13 @@
+{
+  "Id": "SujanSolutionDeployer",
+  "Name": "Sujan Solution Deployer",
+  "AssemblyName": "SujanSolutionDeployer.dll",
+  "Version": "1.0.11",
+  "Description": "Solution Deployer plugin for XrmToolBox — deploys and rolls back Dataverse solutions.",
+  "Company": "Sujan",
+  "Author": "Murugesh Sujan",
+  "Email": "murugeshsujan22@gmail.com",
+  "Url": "https://github.com/Sujan-Murugesh/Solution-Deployment",
+  "Tag": "CRM, Dynamics 365,solution-deployment, Utility,power-platform, dataverse, dynamics365, alm, devops, automation, backup, rollback, version-control, deployment-tools, microsoft-power-platform, low-code, continuous-deployment, enterprise",
+  "Icon": "icon.png"
+}

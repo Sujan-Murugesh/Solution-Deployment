@@ -1,7 +1,7 @@
 # Sujan Solution Deployer
 # Power Platform Solution Deployment Tool
 
-[![NuGet](https://img.shields.io/nuget/v/YourPackageName.svg)](https://www.nuget.org/packages/YourPackageName/)
+[![NuGet](https://img.shields.io/nuget/v/SujanSolutionDeployer.svg)](https://www.nuget.org/packages/SujanSolutionDeployer/)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
 A comprehensive solution deployment and management tool for Microsoft Power Platform that streamlines the process of deploying solutions across multiple environments with advanced features like version control, automated backups, and rollback capabilities.
@@ -44,17 +44,17 @@ A comprehensive solution deployment and management tool for Microsoft Power Plat
 
 ### Via NuGet Package Manager
 ```bash
-Install-Package YourPackageName
+Install-Package SujanSolutionDeployer --version 1.0.11
 ```
 
 ### Via .NET CLI
 ```bash
-dotnet add package YourPackageName
+dotnet add package SujanSolutionDeployer --version 1.0.11
 ```
 
 ### Via Package Manager Console
 ```powershell
-PM> Install-Package YourPackageName
+PM> NuGet\Install-Package SujanSolutionDeployer -Version 1.0.11
 ```
 
 ## 🎯 Quick Start

@@ -19,6 +19,7 @@ using ConnectionManager = Sujan_Solution_Deployer.Services.ConnectionManager;
 using Label = System.Windows.Forms.Label;
 using SolutionInfo = Sujan_Solution_Deployer.Models.SolutionInfo;
 using Sujan_Solution_Deployer.Helpers;
+using Sujan_Solution_Deployer.Forms;
 
 namespace Sujan_Solution_Deployer
 {
@@ -1636,11 +1637,13 @@ namespace Sujan_Solution_Deployer
             }
         }
 
+        #region ==>Help
         private void tsbHelp_Click(object sender, EventArgs e)
         {
             try
             {
-                ShowHelp();
+                var helpForm = new HelpForm();
+                helpForm.ShowDialog(this);
             }
             catch (Exception ex)
             {
@@ -1649,134 +1652,7 @@ namespace Sujan_Solution_Deployer
             }
         }
 
-        private void ShowHelp()
-        {
-            var helpText = @"
-                ╔══════════════════════════════════════════════════════════╗
-                ║     SUJAN SOLUTION DEPLOYER - QUICK START GUIDE         ║
-                ╚══════════════════════════════════════════════════════════╝
-
-                📋 OVERVIEW
-                This tool automates solution deployment across Dynamics 365 / 
-                Power Platform environments with version management, automated 
-                backups, and deployment history tracking.
-
-                🚀 GETTING STARTED
-
-                1️⃣ LOAD SOLUTIONS
-                   • Connect to your DEV environment
-                   • Click '🔄 Load Solutions'
-                   • Select solutions to deploy
-
-                2️⃣ ADD TARGET ENVIRONMENTS
-                   • Click '➕ Add Environment'
-                   • Select UAT/PROD environments
-                   • Multiple targets supported
-
-                3️⃣ CONFIGURE OPTIONS
-                   • Set backup location
-                   • Choose deployment type (Update/Upgrade)
-                   • Enable/disable workflow publishing
-                   • Select 'Deploy as Managed' if needed
-
-                4️⃣ VERSION MANAGEMENT
-                   • Set version increments (Major/Minor/Build/Revision)
-                   • Manual version entry supported
-                   • Auto-update source versions
-
-                5️⃣ DEPLOY
-                   • Click '🚀 START DEPLOYMENT'
-                   • Monitor progress in log window
-                   • View detailed results
-
-                📊 FEATURES
-
-                ✅ Auto Backup - Solutions backed up before deployment
-                ✅ Version Control - Increment versions automatically
-                ✅ Multi-Target - Deploy to multiple environments
-                ✅ History Tracking - Full deployment audit trail
-                ✅ Managed Conversion - Convert unmanaged to managed
-                ✅ Progress Monitoring - Real-time deployment status
-
-                🔧 DEPLOYMENT OPTIONS
-
-                - Update: Upgrades existing or installs if new
-                - Upgrade: Forces new version, stages for upgrade
-                - Publish Workflows: Auto-publish after import
-                - Overwrite Customizations: Replaces unmanaged changes
-                - Deploy as Managed: Converts unmanaged to managed
-
-                📜 DEPLOYMENT HISTORY
-
-                - View all past deployments
-                - Filter by environment or solution
-                - Export to CSV for reporting
-                - Track success/failure rates
-
-                💡 TIPS
-
-                - Always backup before deployment
-                - Test in UAT before PROD
-                - Review version changes carefully
-                - Monitor import progress
-                - Check deployment history for issues
-
-                ⚠️ IMPORTANT NOTES
-
-                - Managed solutions cannot be uninstalled easily
-                - Version downgrades may cause issues
-                - Always test in non-production first
-                - Keep backups of critical solutions
-                - Review overwrite options carefully
-
-                📞 SUPPORT
-
-                - Feedback: Use '💬 Feedback' button
-                - Issues: Report via GitHub
-                - Updates: Check for latest version
-
-                ═══════════════════════════════════════════════════════════
-
-                For detailed documentation, visit the GitHub repository.
-                ";
-
-            var helpForm = new Form
-            {
-                Text = "Help - Sujan Solution Deployer",
-                Size = new Size(700, 600),
-                StartPosition = FormStartPosition.CenterParent,
-                FormBorderStyle = FormBorderStyle.Sizable,
-                MinimizeBox = false,
-                MaximizeBox = true
-            };
-
-            var txtHelp = new RichTextBox
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                Font = new Font("Consolas", 9F),
-                BackColor = Color.White,
-                Text = helpText,
-                WordWrap = true
-            };
-
-            var btnClose = new Button
-            {
-                Text = "❌ Close",
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                BackColor = Color.FromArgb(100, 100, 100),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
-            };
-            btnClose.Click += (s, args) => helpForm.Close();
-
-            helpForm.Controls.Add(txtHelp);
-            helpForm.Controls.Add(btnClose);
-            helpForm.ShowDialog(this);
-        }
-
+        #endregion
         private void chkEmailNotification_CheckedChanged(object sender, EventArgs e)
         {
             txtNotificationEmail.Enabled = chkEmailNotification.Checked;
